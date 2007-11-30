@@ -10,7 +10,7 @@ MapMe basically displays 2D maps on Google Android but also adds additional feat
 
 These extra features are:
   * Interaction with Android GPS device (track GPS position, saves routes, etc)
-  * Storage of location bookmarks/navpoints (including search capabilities) via <a href="http://www.db4o.com">db4o</a>
+  * Storage of location bookmarks/navpoints (including search capabilities) via db4o (http://www.db4o.com)
   * A system for allowing you friends to watch your location and viceversa
 
 and more!
