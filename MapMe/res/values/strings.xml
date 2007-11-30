@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BrowseMap</string>
+    <string name="zoom_in">Zoom In</string>
+    <string name="zoom_out">Zoom Out</string>
+    <string name="satellite">Satellite View</string>
+    <string name="traffic">Traffic View</string>
+    <string name="find">Find Location</string>
+    <string name="center_gps">Center on GPS</string>
+    <string name="track_gps">Track GPS</string>
+    <string name="save">Save Location</string>
+    <string name="saveButton">Save</string>
+    <string name="edit">Bookmarks</string>
+    <string name="name">Name</string>
+    <string name="description">Description</string>
+    <string name="empty_list">No bookmarks</string>
+    <string name="bkm_edit">Edit</string>
+    <string name="bkm_delete">Delete</string>
+    <string name="bkm_count">Count</string>
+    <string name="bkm_goto">Goto..</string>
+    <string name="latitude">Lat</string>
+    <string name="longitude">Lon</string>
+</resources>
