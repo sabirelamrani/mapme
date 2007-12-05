@@ -63,7 +63,7 @@ public class BrowseMap extends MapActivity {
                 (-122.292060 * 1000000)); //db4objects, Inc. (San Mateo)
         MapController mc = mMapView.getController();
         mc.animateTo(p);
-        mc.zoomTo(14);
+        mc.zoomTo(15);
         setContentView(mMapView);
 
         mMapView.createOverlayController().add(new MyOverlay(this), true);
