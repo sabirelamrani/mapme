@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.apache.maps">
-    <application android:icon="@drawable/compass">
-        <activity class=".BrowseMap" android:label="Android Maps">
+    <application android:icon="@drawable/map">
+        <activity class=".BrowseMap" android:label="MapMe">
             <intent-filter>
                 <action android:value="android.intent.action.MAIN" />
                 <category android:value="android.intent.category.LAUNCHER" />

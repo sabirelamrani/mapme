@@ -46,8 +46,8 @@ public class Db4oHelper {
     private Configuration dbConfig(){
     	Configuration c = Db4o.newConfiguration();
     	c.objectClass(MapBookmark.class).objectField("name").indexed(true); 
-    	c.objectClass(MapBookmark.class).updateDepth(6);
-    	c.objectClass(MapBookmark.class).minimumActivationDepth(6);
+    	c.objectClass(MapBookmark.class).updateDepth(3);
+    	c.objectClass(MapBookmark.class).minimumActivationDepth(3);
     	c.objectClass(MapBookmark.class).cascadeOnDelete(true);
     	return c;
     }
@@ -111,9 +111,7 @@ public class Db4oHelper {
     }
 
     public void deleteBookmark(String name) {
-        //Search by name
     	MapBookmark bkm = getBookmark(name);
-        //Delete object
     	if(bkm != null){
     		db().delete(bkm);
     		db().commit();
