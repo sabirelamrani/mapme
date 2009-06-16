@@ -1,14 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.apache.maps">
-    <application android:icon="@drawable/map">
-        <activity class=".BrowseMap" android:label="MapMe">
+    <uses-sdk android:minSdkVersion="3" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <application android:icon="@drawable/compass">
+    	<uses-library android:name="com.google.android.maps" />
+        <activity class=".BrowseMap" android:name="BrowseMap" android:label="MapMe">
             <intent-filter>
-                <action android:value="android.intent.action.MAIN" />
-                <category android:value="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity class=".Search" android:label="Find" />
-        <activity class=".Bookmark" android:label="Bookmark" />
-        <activity class=".BookmarkList" android:label="Bookmarks" />
+        <activity class=".Search" android:name="Search" android:label="Find"/>
+        <activity class=".Bookmark" android:name="Bookmark" />
+        <activity class=".BookmarkList" android:name="BookmarkList" android:label="Bookmarks"/>
     </application>
 </manifest> 

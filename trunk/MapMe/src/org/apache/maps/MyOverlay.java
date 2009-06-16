@@ -1,11 +1,15 @@
 package org.apache.maps;
 
+import java.util.List;
+
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
+import android.location.Address;
+
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
-import com.google.android.maps.Point;
-import com.google.googlenav.Placemark;
-import com.google.googlenav.Search;
 
 public class MyOverlay extends Overlay {
     BrowseMap mMap;
@@ -17,21 +21,20 @@ public class MyOverlay extends Overlay {
         paint2.setARGB(255, 255, 255, 255);
     }
 
-    public void draw(Canvas canvas, PixelCalculator pixelCalculator, boolean b) {
-        super.draw(canvas, pixelCalculator, b);
+    public void draw(Canvas canvas, MapView map, boolean b) {
+        super.draw(canvas, map, b);
 
-        Search search = mMap.getSearch();
-        if (search != null) {
-            for (int i = 0; i < search.numPlacemarks(); i++) {
-                Placemark placemark = search.getPlacemark(i);
-                int[] screenCoords = new int[2];
-                Point point = new Point(placemark.getLocation().getLatitude(),
-                        placemark.getLocation().getLongitude());
-                pixelCalculator.getPointXY(point, screenCoords);
-                canvas.drawCircle(screenCoords[0], screenCoords[1], 9, paint1);
+        List<Address>addresses= mMap.getAddresses();
+        if (addresses != null && addresses.size() > 0) {
+            for (int i = 0; i < addresses.size(); i++) {
+                Address addr = addresses.get(i);
+                GeoPoint point = new GeoPoint((((int)(addr.getLatitude() * 1e6))),
+                        (((int)(1e6 * addr.getLongitude()))));
+                Point screenCoords = mMap.getProjection().toPixels(point, null);
+                canvas.drawCircle(screenCoords.x, screenCoords.y, 9, paint1);
                 canvas.drawText(Integer.toString(i + 1),
-                        screenCoords[0] - 4,
-                        screenCoords[1] + 4, paint2);
+                        screenCoords.x - 4,
+                        screenCoords.y + 4, paint2);
             }
         }
     }

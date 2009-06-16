@@ -3,21 +3,18 @@ package org.apache.maps;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.db4o.android.Db4oHelper;
-import com.db4o.android.MapBookmark;
-
 import android.app.ListActivity;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Menu.Item;
-import android.view.View.MeasureSpec;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
+
+import com.db4o.android.Db4oHelper;
+import com.db4o.android.MapBookmark;
 
 public class BookmarkList extends ListActivity {
 
@@ -42,7 +39,7 @@ public class BookmarkList extends ListActivity {
     @Override
     public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		setContentView(R.layout.bkm_list);
+ 		setContentView(R.layout.bkm_list);
 		fillData();
     }
     
@@ -63,43 +60,17 @@ public class BookmarkList extends ListActivity {
 		ArrayAdapter<String> entries = 
 		    new ArrayAdapter<String>(this, R.layout.bkm_row, items);
 		setListAdapter(entries);
-		setupListStripes();
     }
 
-    /**
-     * Add stripes to the list view.
-     * 
-     * This will alternate row colors in the list view. 100% borrowed from
-     * googles notepad application.  
-     */
-    private void setupListStripes() {
-		// Get Drawables for alternating stripes
-		Drawable[] lineBackgrounds = new Drawable[2];
-	
-		lineBackgrounds[0] = getResources().getDrawable(R.drawable.even_stripe);
-		lineBackgrounds[1] = getResources().getDrawable(R.drawable.odd_stripe);
-	
-		// Make and measure a sample TextView of the sort our adapter will return
-		View view = getViewInflate().inflate(
-			android.R.layout.simple_list_item_1, null, null);
-	
-		TextView v = (TextView) view.findViewById(android.R.id.text1);
-		v.setText("X");
-		// Make it 100 pixels wide, and let it choose its own height.
-		v.measure(MeasureSpec.makeMeasureSpec(View.MeasureSpec.EXACTLY, 100),
-			MeasureSpec.makeMeasureSpec(View.MeasureSpec.UNSPECIFIED, 0));
-		int height = v.getMeasuredHeight();
-		getListView().setStripes(lineBackgrounds, height);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 	
-		menu.add(0, EDIT_BOOKMARK_INDEX, R.string.bkm_edit);
-		menu.add(0, DEL_BOOKMARK_INDEX, R.string.bkm_delete);
-		menu.add(0, COUNT_BOOKMARK_INDEX, R.string.bkm_count);
-		menu.add(0, GOTO_BOOKMARK_INDEX, R.string.bkm_goto);
+		menu.add(0, EDIT_BOOKMARK_INDEX, EDIT_BOOKMARK_INDEX, R.string.bkm_edit);
+		menu.add(0, DEL_BOOKMARK_INDEX, DEL_BOOKMARK_INDEX, R.string.bkm_delete);
+		menu.add(0, COUNT_BOOKMARK_INDEX, COUNT_BOOKMARK_INDEX, R.string.bkm_count);
+		menu.add(0, GOTO_BOOKMARK_INDEX, GOTO_BOOKMARK_INDEX, R.string.bkm_goto);
 	
 		return super.onCreateOptionsMenu(menu);
     }
@@ -109,16 +80,21 @@ public class BookmarkList extends ListActivity {
 		fillData();
     }
 
-    public boolean onOptionsItemSelected(Item item) {
-		switch(item.getId()) {
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	int position = item.getItemId();
+    	int itemPosition = getSelectedItemPosition() < 0 ? 0 : getSelectedItemPosition();
+    	if (entries.size() == 0) {
+    		position = COUNT_BOOKMARK_INDEX;
+    	} 
+		switch(position) {
 		case EDIT_BOOKMARK_INDEX:
-		    editBookmark(getSelection());
+		    editBookmark(itemPosition);
 		    break;
 		case DEL_BOOKMARK_INDEX:
-			delBookmark(entries.get(getSelection()).name);
+			delBookmark(entries.get(itemPosition).name);
 		    break;
 		case GOTO_BOOKMARK_INDEX:
-			BrowseMap.bookmark = entries.get(getSelection());
+			BrowseMap.bookmark = entries.get(itemPosition);
 			setResult(RESULT_GOTO_MAP);
 			finish();
 		    break;
@@ -140,19 +116,19 @@ public class BookmarkList extends ListActivity {
     	MapBookmark mb = entries.get(position);
     	i.putExtra(BookmarkList.BKM_NAME, mb.name);
 		Bookmark.current = mb;
-		startSubActivity(i, ACTIVITY_EDIT);
+		startActivityForResult(i, ACTIVITY_EDIT);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
-	    String data, Bundle extras) {
+	    Intent data) {
 
-		super.onActivityResult(requestCode, resultCode, data, extras);
+		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == ACTIVITY_EDIT && resultCode != 0){
-        	String name = data.split("/n")[0];
+        	String name = data.getStringExtra(BKM_NAME);
         	String desc;
         	try{
-        		desc = data.split("/n")[1];
+        		desc = data.getStringExtra(BKM_DESC);
         	}
         	catch(Exception e){
         		desc = "";
@@ -170,9 +146,8 @@ public class BookmarkList extends ListActivity {
     }
 
     protected void notifyUser(String msg){
-    	NotificationManager nm = (NotificationManager)
-			getSystemService(NOTIFICATION_SERVICE);
-    	nm.notifyWithText(100, msg, NotificationManager.LENGTH_SHORT, null);
+    	Toast.makeText(BookmarkList.this, msg,
+				Toast.LENGTH_SHORT).show();
     }
 
 }

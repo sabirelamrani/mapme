@@ -1,10 +1,11 @@
 package org.apache.maps;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.view.View;
 
 public class Search extends Activity {
     public Search() {
@@ -23,8 +24,12 @@ public class Search extends Activity {
         addButton.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
-                setResult(RESULT_OK, ((EditText)findViewById(R.id.searchText)).getText().toString());
-                finish();
+            	Intent callbackIntent = new Intent();
+				
+				// Return the search string to the caller.
+				callbackIntent.putExtra("searchString", ((EditText)findViewById(R.id.searchText)).getText().toString());
+				setResult(RESULT_OK, callbackIntent);
+            	finish();
             } });
 
     }
