@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <project name="BrowseMap" default="package">
-    <property name="sdk-folder" value="C:\android" />
-    <property name="android-tools" value="C:\android\tools" />
+    <property name="sdk-folder" value="C:\java\android-sdk-windows-1.5_r2" />
+    <property name="android-tools" value="C:\Java\android-sdk-windows-1.5_r2\platforms\android-1.5\tools" />
 
     <!-- The intermediates directory -->
     <!-- Eclipse uses "bin" for its own output, so we do the same. -->

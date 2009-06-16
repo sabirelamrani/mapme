@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
@@ -7,9 +9,8 @@
 			<TableRow>
 				<TextView android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textAlign="end" 
 					android:text="@string/name" />
-				<EditText id="@+id/name" 
+				<EditText android:id="@+id/name" 
 				  android:layout_width="wrap_content"
 					android:layout_height="wrap_content" 
 					android:layout_weight="1"/>
@@ -17,9 +18,8 @@
 			<TableRow>
 				<TextView android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textAlign="end" 
 					android:text="@string/latitude" />
-				<EditText id="@+id/latitude" 
+				<EditText android:id="@+id/latitude" 
 				  android:layout_width="wrap_content"
 					android:layout_height="wrap_content" 
 					android:layout_weight="1"/>
@@ -27,9 +27,8 @@
 			<TableRow>
 				<TextView android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:textAlign="end" 
 					android:text="@string/longitude" />
-				<EditText id="@+id/longitude" 
+				<EditText android:id="@+id/longitude" 
 				  android:layout_width="wrap_content"
 					android:layout_height="wrap_content" 
 					android:layout_weight="1"/>
@@ -39,12 +38,12 @@
 	<TextView android:layout_width="wrap_content"
 		android:layout_height="wrap_content" 
 		android:text="@string/description" />
-	<EditText id="@+id/description" android:layout_width="fill_parent"
+	<EditText android:id="@+id/description" android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:layout_weight="1"
 		android:scrollbars="vertical" />
 	
-	<Button id="@+id/save" 
+	<Button android:id="@+id/save" 
 	  android:text="@string/saveButton"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content" />

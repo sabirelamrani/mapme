@@ -11,7 +11,6 @@ import com.db4o.*;
 import com.db4o.config.*;
 import com.db4o.query.Query;
 
-//import java.io.File;
 
 /**
  * @author German Viscuso
@@ -46,14 +45,14 @@ public class Db4oHelper {
     private Configuration dbConfig(){
     	Configuration c = Db4o.newConfiguration();
     	c.objectClass(MapBookmark.class).objectField("name").indexed(true); 
-    	c.objectClass(MapBookmark.class).updateDepth(3);
-    	c.objectClass(MapBookmark.class).minimumActivationDepth(3);
+    	c.objectClass(MapBookmark.class).updateDepth(6);
+    	c.objectClass(MapBookmark.class).minimumActivationDepth(6);
     	c.objectClass(MapBookmark.class).cascadeOnDelete(true);
     	return c;
     }
 	
 	private String db4oDBFullPath(Context ctx) {
-		return ctx.getDataDir() + "/" + "browsemap.db4o";
+		return ctx.getDir("data", 0) + "/" + "browsemap.db4o";
 	}
 	
 	/**
@@ -82,20 +81,21 @@ public class Db4oHelper {
 		bkm.setZoomLevel(zoomLevel);
 		bkm.setSatellite(satellite);
 		bkm.setTraffic(traffic);
-    	db().set(bkm);
+    	db().store(bkm);
     	db().commit();
     }
     
     public MapBookmark getBookmark(String name){
     	MapBookmark proto = new MapBookmark(name);
-    	ObjectSet result = db().get(proto);
+    	ObjectSet<MapBookmark> result = db().queryByExample(proto);
     	if(result.hasNext()){
     		return (MapBookmark)result.next();
     	}
     	return null;
     }
     
-    public List<MapBookmark> getBookmarkList(){
+    @SuppressWarnings("unchecked")
+	public List<MapBookmark> getBookmarkList(){
     	ArrayList<MapBookmark> ret = new ArrayList<MapBookmark>();
         ObjectSet result = getBookmarks();
         while (result.hasNext())
@@ -103,7 +103,8 @@ public class Db4oHelper {
         return ret;
     }
     
-    private ObjectSet getBookmarks(){
+    @SuppressWarnings("unchecked")
+	private ObjectSet getBookmarks(){
     	Query query = db().query();
     	query.constrain(MapBookmark.class);
     	query.descend("name").orderAscending();
@@ -111,7 +112,9 @@ public class Db4oHelper {
     }
 
     public void deleteBookmark(String name) {
+        //Search by name
     	MapBookmark bkm = getBookmark(name);
+        //Delete object
     	if(bkm != null){
     		db().delete(bkm);
     		db().commit();
