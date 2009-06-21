@@ -6,7 +6,6 @@
 This demo will show a blank map if you don't provide your own Android Maps API key.
 
 The procedure to generate it is described here:
-
 http://developer.android.com/guide/topics/location/geo/mapkey.html
 
 Once you get your API key edit the following file:
