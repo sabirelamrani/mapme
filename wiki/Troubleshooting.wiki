@@ -12,7 +12,7 @@ Once you get your API key edit the following file:
 
 res/layout/mapview.xml
 
-and replace YOUR_API_KEY_HERE with your generated key.
+and replace _YOUR_API_KEY_HERE_ with your generated key.
 
 The key must be generated using the same fingerprint in your Eclipse Android debug store
 (more info here: http://mobiforge.com/developing/story/using-google-maps-android)
