@@ -1,9 +1,11 @@
 In order to center map on current location while you're testing MapMe in the Android emulator you'll have to manually pass a location via telnet, eg:
 
    telnet localhost 5554
+   
    geo fix -122.08 37.41
 
 (or, alternatively, code a mock location provider (more info here: http://androidcommunity.com/forums/showthread.php?t=55))
 
 However, there's a bug in Android that prevents geo fix to work properly with the emulator.
+
 See: http://code.google.com/p/android/issues/detail?id=1701
