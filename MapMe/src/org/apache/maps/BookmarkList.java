@@ -55,8 +55,11 @@ public class BookmarkList extends ListActivity {
     private void fillData() {
 		List<String> items = new ArrayList<String>();
 		entries = dbHelper().getBookmarkList();
-		for (MapBookmark entry : entries)
-			items.add(entry.name);
+		if(entries.isEmpty())
+			notifyUser("No entries");
+		else
+			for (MapBookmark entry : entries)
+				items.add(entry.name);
 		ArrayAdapter<String> entries = 
 		    new ArrayAdapter<String>(this, R.layout.bkm_row, items);
 		setListAdapter(entries);
@@ -146,8 +149,7 @@ public class BookmarkList extends ListActivity {
     }
 
     protected void notifyUser(String msg){
-    	Toast.makeText(BookmarkList.this, msg,
-				Toast.LENGTH_SHORT).show();
+    	Toast.makeText(BookmarkList.this, msg, Toast.LENGTH_SHORT).show();
     }
 
 }

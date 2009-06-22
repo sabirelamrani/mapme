@@ -5,10 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import android.content.Context;
 import android.content.Intent;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -24,7 +27,7 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Projection;
 
-public class BrowseMap extends MapActivity {
+public class BrowseMap extends MapActivity implements LocationListener {
 	private MapView mMapView;
 	private Db4oHelper db4oHelper;
 
@@ -192,31 +195,51 @@ public class BrowseMap extends MapActivity {
 		return true;
 	}
 
+	//Get last known location and center map on it
 	public boolean performCenterOnGPS() {
-		// Get handler to system location manager
-		LocationManager locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-		// Get the first provider available
-		List<String> providerNames = locMan.getProviders(true);
-
-		if (providerNames.size() == 0) {
-			notifyUser("No GPS providers available!");
+		//Get location manager
+	 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+	 	//Register this as location listener
+	 	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 500.0f, this);
+	 	//Select best provider (will try GPS first, then network triangulation)
+	 	String provider = locationManager.getBestProvider(new Criteria(), true);
+	 	
+	 	if (provider == null) {
+			notifyUser("No location provider found");
 			return false;
 		}
-
-		// Returns a new location fix from the given provider
-		Location curLoc = locMan.getLastKnownLocation(providerNames.get(0));
-
+	 	
+	 	if(!locationManager.isProviderEnabled(provider)){
+			notifyUser(provider + " is disabled");
+			return false;
+		}
+	 	
+		Location currentLocation = locationManager.getLastKnownLocation(provider);
+		
+		if(currentLocation == null){
+			notifyUser("Unknown location");
+			return false;
+		}
+		
 		// Get point
-		GeoPoint curLocAsPoint = new GeoPoint(
-				(int) (curLoc.getLatitude() * 1000000), (int) (curLoc
-						.getLongitude() * 1000000));
+		GeoPoint geoPoint = new GeoPoint(
+				(int) (currentLocation.getLatitude() * 1e6), 
+				(int) (currentLocation.getLongitude() * 1e6));
 
 		// Center on map
-		MapController mc = mMapView.getController();
-		mc.animateTo(curLocAsPoint);
+		MapController mapController = mMapView.getController();
+		mapController.animateTo(geoPoint);
 
 		return true;
+	}
+	
+	public void onLocationChanged(Location location) {
+		if (location != null) {
+			double lat = location.getLatitude();
+			double lng = location.getLongitude();
+			GeoPoint p = new GeoPoint((int) lat * 1000000, (int) lng * 1000000);
+			notifyUser("Detected: " + p.toString());
+		}
 	}
 
 	public boolean performTrackGPS() {
@@ -251,19 +274,17 @@ public class BrowseMap extends MapActivity {
 	}
 
 	private void startSearch(final String text) {
-		mGeocoder = new Geocoder(this.getApplicationContext(), Locale
-				.getDefault());
-
+		mGeocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
 		Thread t = new Thread(new Runnable() {
 			public void run() {
 				try {
-					addresses = mGeocoder
-							.getFromLocationName(text, MAX_RESULTS);
-					if (addresses.size() > 0) {
+					addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
+					if (addresses.size() > 0) 
 						goTo(0);
-					} 
+					else
+						notifyUser("No location found!");
 				} catch (IOException ioe) {
-					//Could not find any location: + ioe.getMessage()
+					notifyUser("Search failed:" + ioe.getMessage());
 				}
 			}
 
@@ -274,7 +295,6 @@ public class BrowseMap extends MapActivity {
 
 	private void goTo(int itemNo) {
 		Address addr = addresses.get(itemNo);
-
 		GeoPoint p = new GeoPoint(((int) (1e6 * addr.getLatitude())),
 				((int) (1e6 * addr.getLongitude())));
 		MapController mc = mMapView.getController();
@@ -325,8 +345,13 @@ public class BrowseMap extends MapActivity {
 		}
 	}
 
+	//Popup window to quickly pass user notifications
+	void notifyUser(Context ctx, String message){
+		Toast.makeText(ctx, message, Toast.LENGTH_SHORT).show();
+	}
+	
 	void notifyUser(String message) {
-		Toast.makeText(BrowseMap.this, message, Toast.LENGTH_SHORT).show();
+		notifyUser(BrowseMap.this, message);
 	}
 
 	@Override
@@ -345,6 +370,22 @@ public class BrowseMap extends MapActivity {
 	public Projection getProjection() {
 		return mMapView.getProjection();
 	}
+
+	public void onProviderDisabled(String arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	/*
 	 * @Override protected void onPause() { super.onPause(); dbHelper().close();
 	 * db4oHelper = null; }
