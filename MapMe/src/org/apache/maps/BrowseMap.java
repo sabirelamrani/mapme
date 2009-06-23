@@ -14,6 +14,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Message;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,6 +26,7 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
+import com.google.android.maps.Overlay;
 import com.google.android.maps.Projection;
 
 public class BrowseMap extends MapActivity implements LocationListener {
@@ -55,11 +57,13 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public static final int CENTER_GPS_INDEX = Menu.FIRST + 7;
 	public static final int TRACK_GPS_INDEX = Menu.FIRST + 8;
 	
-
 	public static final String BM_NAME = "name";
 	public static final String BM_DESC = "desc";
 
 	protected static MapBookmark bookmark;
+	
+	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
+			(int) (-122.256527255 * 1e6)); //Versant (Redwood City)
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -67,15 +71,32 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		setContentView(R.layout.mapview);
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
-		GeoPoint p = new GeoPoint((int) (37.524393 * 1e6),
-				(int) (-122.256527255 * 1e6)); // Versant (Redwood City)
-		MapController mc = mMapView.getController();
-		mc.animateTo(p);
-		//mc.zoomToSpan(p.getLatitudeE6(), p.getLongitudeE6());
-		mc.setZoom(17);
+		animateToHomePoint();
 		mMapView.setSatellite(true);
-		mMapView.getOverlays().add(new MyOverlay(this));
+		mapOverlays().add(new MyOverlay(this));
 		dbHelper();
+	}
+	
+	protected List<Overlay> mapOverlays(){
+		return mMapView.getOverlays();
+	}
+	
+	protected void animateTo(GeoPoint point){
+		mapController().animateTo(point);
+		//mapController().zoomToSpan(point.getLatitudeE6(), point.getLongitudeE6());
+	}
+	
+	protected void animateTo(GeoPoint point, Message msg){
+		mapController().animateTo(point, msg);
+	}
+	
+	protected void animateToHomePoint(){
+		animateTo(HOME_POINT);
+		mapController().setZoom(17);
+	}
+	
+	protected MapController mapController(){
+		return mMapView.getController();
 	}
 
 	private Db4oHelper dbHelper() {
@@ -173,7 +194,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public boolean performZoomOut() {
 		// Zoom Out
 		int level = mMapView.getZoomLevel();
-		mMapView.getController().setZoom(level - 1);
+		mapController().setZoom(level - 1);
 		return true;
 	}
 
@@ -222,13 +243,12 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		}
 		
 		// Get point
-		GeoPoint geoPoint = new GeoPoint(
+		GeoPoint point = new GeoPoint(
 				(int) (currentLocation.getLatitude() * 1e6), 
 				(int) (currentLocation.getLongitude() * 1e6));
 
 		// Center on map
-		MapController mapController = mMapView.getController();
-		mapController.animateTo(geoPoint);
+		animateTo(point);
 
 		return true;
 	}
@@ -248,8 +268,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 
 	public boolean performCreateBookmark() {
-		Intent intent = new Intent(BrowseMap.this,
-				org.apache.maps.Bookmark.class);
+		Intent intent = new Intent(BrowseMap.this, org.apache.maps.Bookmark.class);
 		GeoPoint loc = mMapView.getMapCenter();
 		Bookmark.current = new MapBookmark();
 		Bookmark.current.setLatitude(loc.getLatitudeE6());
@@ -262,8 +281,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 
 	public boolean performEditBookmarks() {
-		Intent intent = new Intent(BrowseMap.this,
-				org.apache.maps.BookmarkList.class);
+		Intent intent = new Intent(BrowseMap.this, org.apache.maps.BookmarkList.class);
 		startActivityForResult(intent, EDIT_BOOKMARKS);
 		return true;
 	}
@@ -297,8 +315,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		Address addr = addresses.get(itemNo);
 		GeoPoint p = new GeoPoint(((int) (1e6 * addr.getLatitude())),
 				((int) (1e6 * addr.getLongitude())));
-		MapController mc = mMapView.getController();
-		mc.animateTo(p);
+		animateTo(p);
 	}
 
 	@Override
@@ -324,14 +341,13 @@ public class BrowseMap extends MapActivity implements LocationListener {
 							Bookmark.current.isSatellite(),
 							Bookmark.current.isTraffic());
 				} else {
-					notifyUser("Can't save without a name");
+					notifyUser("Please enter a name");
 				}
 			} else {
-				notifyUser("Can't save without a name");
+				notifyUser("Please enter a name");
 			}
 		} else if (requestCode == EDIT_BOOKMARKS) {
 			if (resultCode == RESULT_GOTO_MAP) {
-				MapController mc = mMapView.getController();
 				if (mMapView.isSatellite() != BrowseMap.bookmark.isSatellite())
 					mMapView.setSatellite(true);
 				if (mMapView.isTraffic() != BrowseMap.bookmark.isTraffic())
@@ -339,8 +355,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 				// Navigate to bookmarked point
 				GeoPoint p = new GeoPoint(BrowseMap.bookmark.getLatitude(),
 						BrowseMap.bookmark.getLongitude());
-				mc.animateTo(p);
-				mc.setZoom(BrowseMap.bookmark.getZoomLevel());
+				animateTo(p);
+				mapController().setZoom(BrowseMap.bookmark.getZoomLevel());
 			}
 		}
 	}
