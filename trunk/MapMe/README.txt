@@ -11,7 +11,7 @@ Once you get your API key edit the following files:
 res/layout/mapview.xml
 and replace YOUR_API_KEY_HERE with your generated key.
 
-The key must be generated using the same fingerprint in your Eclipse Android debug store
+The key must be generated using the same fingerprint found in your Eclipse Android debug store
 (more info here: http://mobiforge.com/developing/story/using-google-maps-android)
 
 This demo is based on BrowseMap by Davanum Srinivas:
