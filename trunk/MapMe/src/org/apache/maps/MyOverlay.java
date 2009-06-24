@@ -38,4 +38,11 @@ public class MyOverlay extends Overlay {
             }
         }
     }
+    
+    @Override
+    public boolean onTap(GeoPoint point, MapView view) {
+        mMap.notifyUser("Tapped: " + Double.toString(point.getLatitudeE6()/1000000.0) 
+        		+ "/" + Double.toString(point.getLongitudeE6()/1000000.0));
+        return super.onTap(point, view);
+    }
 }
