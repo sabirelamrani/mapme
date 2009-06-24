@@ -18,6 +18,7 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.widget.Toast;
 
 import com.db4o.android.Db4oHelper;
@@ -52,15 +53,19 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public static final int FIND_INDEX = Menu.FIRST + 2;
 	public static final int SAVE_INDEX = Menu.FIRST + 3;
 	public static final int EDIT_INDEX = Menu.FIRST + 4;
-	public static final int SATELLITE_INDEX = Menu.FIRST + 5;
-	public static final int TRAFFIC_INDEX = Menu.FIRST + 6;
-	public static final int CENTER_GPS_INDEX = Menu.FIRST + 7;
-	public static final int TRACK_GPS_INDEX = Menu.FIRST + 8;
+	public static final int MAP_MODE_INDEX = Menu.FIRST + 5;
+	public static final int SATELLITE_INDEX = Menu.FIRST + 6;
+	public static final int TRAFFIC_INDEX = Menu.FIRST + 7;
+	public static final int STREETVIEW_INDEX = Menu.FIRST + 8;
+	public static final int CENTER_LOCATION_INDEX = Menu.FIRST + 9;
+	public static final int TRACK_LOCATION_INDEX = Menu.FIRST + 10;
 	
 	public static final String BM_NAME = "name";
 	public static final String BM_DESC = "desc";
 
 	protected static MapBookmark bookmark;
+	
+	protected static boolean trackLocation = false;
 	
 	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
 			(int) (-122.256527255 * 1e6)); //Versant (Redwood City)
@@ -71,8 +76,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		setContentView(R.layout.mapview);
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
-		animateToHomePoint();
-		mMapView.setSatellite(true);
+		resetToHomePoint();
+		//mMapView.invalidate(); //necessary?
 		mapOverlays().add(new MyOverlay(this));
 		dbHelper();
 	}
@@ -90,7 +95,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		mapController().animateTo(point, msg);
 	}
 	
-	protected void animateToHomePoint(){
+	protected void resetToHomePoint(){
+		mMapView.setSatellite(false);
+		mMapView.setTraffic(false);
+		mMapView.setStreetView(false);
 		animateTo(HOME_POINT);
 		mapController().setZoom(17);
 	}
@@ -113,13 +121,21 @@ public class BrowseMap extends MapActivity implements LocationListener {
 
 		//menu.add(0, ZOOM_IN_INDEX, ZOOM_IN_INDEX, R.string.zoom_in);
 		//menu.add(0, ZOOM_OUT_INDEX, ZOOM_OUT_INDEX, R.string.zoom_out);
-		menu.add(0, FIND_INDEX, FIND_INDEX, R.string.find);
-		menu.add(0, SAVE_INDEX, SAVE_INDEX, R.string.save);
-		menu.add(0, EDIT_INDEX, EDIT_INDEX, R.string.edit);
-		menu.add(0, SATELLITE_INDEX, SATELLITE_INDEX, R.string.satellite);
-		menu.add(0, TRAFFIC_INDEX, TRAFFIC_INDEX, R.string.traffic);
-		menu.add(0, CENTER_GPS_INDEX, CENTER_GPS_INDEX, R.string.center_gps);
-		menu.add(0, TRACK_GPS_INDEX, TRACK_GPS_INDEX, R.string.track_gps);
+		menu.add(0, FIND_INDEX, FIND_INDEX, R.string.find).setIcon(R.drawable.findonmap);
+		menu.add(0, SAVE_INDEX, SAVE_INDEX, R.string.save).setIcon(R.drawable.save);
+		menu.add(0, EDIT_INDEX, EDIT_INDEX, R.string.edit).setIcon(R.drawable.bookmarks);
+		//menu.add(0, MAP_MODE_INDEX, MAP_MODE_INDEX, R.string.map_mode);
+		//menu.add(0, SATELLITE_INDEX, SATELLITE_INDEX, R.string.satellite);
+		//menu.add(0, TRAFFIC_INDEX, TRAFFIC_INDEX, R.string.traffic);
+		//menu.add(0, STREETVIEW_INDEX, STREETVIEW_INDEX, R.string.streetview);
+		menu.add(0, CENTER_LOCATION_INDEX, CENTER_LOCATION_INDEX, R.string.center_gps).setIcon(R.drawable.mylocation);
+		menu.add(0, TRACK_LOCATION_INDEX, TRACK_LOCATION_INDEX, R.string.track_gps).setIcon(R.drawable.trackme);
+		//Map Mode submenu
+		SubMenu subMenu = menu.addSubMenu(0, MAP_MODE_INDEX, MAP_MODE_INDEX, R.string.map_mode).setIcon(R.drawable.mapmode);
+		subMenu.add(0, SATELLITE_INDEX, SATELLITE_INDEX, R.string.satellite);
+		subMenu.add(0, TRAFFIC_INDEX, TRAFFIC_INDEX, R.string.traffic);
+		subMenu.add(0, STREETVIEW_INDEX, STREETVIEW_INDEX, R.string.streetview);
+		subMenu.setGroupCheckable(0, true, true);
 
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -131,15 +147,29 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		case ZOOM_OUT_INDEX:
 			return performZoomOut();
 		case SATELLITE_INDEX:
+			if (item.isChecked()) 
+				item.setChecked(false);
+			else 
+				item.setChecked(true);
 			return performToggleSatellite();
 		case TRAFFIC_INDEX:
+			if (item.isChecked()) 
+				item.setChecked(false);
+			else 
+				item.setChecked(true);
 			return performToggleTraffic();
+		case STREETVIEW_INDEX:
+			if (item.isChecked()) 
+				item.setChecked(false);
+			else 
+				item.setChecked(true);
+			return performToggleStreetView();
 		case FIND_INDEX:
 			return performFindLocation();
-		case CENTER_GPS_INDEX:
-			return performCenterOnGPS();
-		case TRACK_GPS_INDEX:
-			return performTrackGPS();
+		case CENTER_LOCATION_INDEX:
+			return performCenterOnLocation();
+		case TRACK_LOCATION_INDEX:
+			return performTrackLocation();
 		case SAVE_INDEX:
 			return performCreateBookmark();
 		case EDIT_INDEX:
@@ -157,12 +187,14 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			return performToggleSatellite();
 		} else if (keyCode == KeyEvent.KEYCODE_T) {
 			return performToggleTraffic();
+		} else if (keyCode == KeyEvent.KEYCODE_V) {
+			return performToggleStreetView();
 		} else if (keyCode == KeyEvent.KEYCODE_F) {
 			return performFindLocation();
 		} else if (keyCode == KeyEvent.KEYCODE_G) {
-			return performCenterOnGPS();
+			return performCenterOnLocation();
 		} else if (keyCode == KeyEvent.KEYCODE_X) {
-			return performTrackGPS();
+			return performTrackLocation();
 		} else if (keyCode == KeyEvent.KEYCODE_C) {
 			return performCreateBookmark();
 		} else if (keyCode == KeyEvent.KEYCODE_E) {
@@ -187,7 +219,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public boolean performZoomIn() {
 		// Zoom In
 		int level = mMapView.getZoomLevel();
-		mMapView.getController().setZoom(level + 1);
+		mapController().setZoom(level + 1);
 		return true;
 	}
 
@@ -199,14 +231,23 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 
 	public boolean performToggleSatellite() {
-		// Switch on the satellite images
+		// Switch on/off the satellite images
 		mMapView.setSatellite(!mMapView.isSatellite());
+		//mMapView.invalidate();
 		return true;
 	}
 
 	public boolean performToggleTraffic() {
-		// Switch on traffic overlays
+		// Switch on/off traffic overlays
 		mMapView.setTraffic(!mMapView.isTraffic());
+		//mMapView.invalidate();
+		return true;
+	}
+	
+	public boolean performToggleStreetView() {
+		// Switch on/off StreetView mode
+		mMapView.setStreetView(!mMapView.isStreetView());
+		//mMapView.invalidate();
 		return true;
 	}
 
@@ -217,7 +258,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 
 	//Get last known location and center map on it
-	public boolean performCenterOnGPS() {
+	public boolean performCenterOnLocation() {
 		//Get location manager
 	 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 	 	//Register this as location listener
@@ -241,12 +282,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			notifyUser("Unknown location");
 			return false;
 		}
-		
 		// Get point
 		GeoPoint point = new GeoPoint(
 				(int) (currentLocation.getLatitude() * 1e6), 
 				(int) (currentLocation.getLongitude() * 1e6));
-
 		// Center on map
 		animateTo(point);
 
@@ -256,26 +295,29 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public void onLocationChanged(Location location) {
 		if (location != null) {
 			double lat = location.getLatitude();
-			double lng = location.getLongitude();
-			GeoPoint p = new GeoPoint((int) lat * 1000000, (int) lng * 1000000);
-			notifyUser("Detected: " + p.toString());
+			double lon = location.getLongitude();
+			GeoPoint p = new GeoPoint((int) lat * 1000000, (int) lon * 1000000);
+			//notifyUser("Location: " + Double.toString(lat) + "/" + Double.toString(lon));
+			if(trackLocation)
+				animateTo(p);
 		}
 	}
 
-	public boolean performTrackGPS() {
-		this.notifyUser("Not available yet");
+	public boolean performTrackLocation() {
+		trackLocation = !trackLocation;
 		return true;
 	}
 
 	public boolean performCreateBookmark() {
 		Intent intent = new Intent(BrowseMap.this, org.apache.maps.Bookmark.class);
 		GeoPoint loc = mMapView.getMapCenter();
-		Bookmark.current = new MapBookmark();
-		Bookmark.current.setLatitude(loc.getLatitudeE6());
-		Bookmark.current.setLongitude(loc.getLongitudeE6());
-		Bookmark.current.setZoomLevel(mMapView.getZoomLevel());
-		Bookmark.current.setSatellite(mMapView.isSatellite());
-		Bookmark.current.setTraffic(mMapView.isTraffic());
+		MapBookmark mb = new MapBookmark();
+		mb.setLatitude(loc.getLatitudeE6());
+		mb.setLongitude(loc.getLongitudeE6());
+		mb.setZoomLevel(mMapView.getZoomLevel());
+		mb.setSatellite(mMapView.isSatellite());
+		mb.setTraffic(mMapView.isTraffic());
+		Bookmark.current = mb;
 		startActivityForResult(intent, GET_BOOKMARK_INFO);
 		return true;
 	}
