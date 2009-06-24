@@ -333,6 +333,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		return true;
 	}
 
+	//Reverse geocoding
 	private void startSearch(final String text) {
 		mGeocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
 		Thread t = new Thread(new Runnable() {
@@ -340,7 +341,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 				try {
 					addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
 					if (addresses.size() > 0) 
-						goTo(0);
+						goTo(0);//TODO offer list with all locations for selection
 					else
 						notifyUser("No location found!");
 				} catch (IOException ioe) {
@@ -358,6 +359,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		GeoPoint p = new GeoPoint(((int) (1e6 * addr.getLatitude())),
 				((int) (1e6 * addr.getLongitude())));
 		animateTo(p);
+		mMapView.invalidate();
 	}
 
 	@Override

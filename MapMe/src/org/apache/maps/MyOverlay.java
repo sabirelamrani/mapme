@@ -1,18 +1,28 @@
 package org.apache.maps;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.location.Address;
+import android.location.Geocoder;
+import android.view.MotionEvent;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
 public class MyOverlay extends Overlay {
-    BrowseMap mMap;
+    
+	private static final int BALLOON_HEIGHT = 34;
+	private static final int BALLOON_WIDTH = 37;
+	
+	BrowseMap mMap;
     Paint paint1 = new Paint();
     Paint paint2 = new Paint();
 
@@ -31,6 +41,11 @@ public class MyOverlay extends Overlay {
                 GeoPoint point = new GeoPoint((((int)(addr.getLatitude() * 1e6))),
                         (((int)(1e6 * addr.getLongitude()))));
                 Point screenCoords = mMap.getProjection().toPixels(point, null);
+                
+                //---add balloon---
+                //Bitmap bmp = BitmapFactory.decodeResource(mMap.getResources(), R.drawable.pin);            
+                //canvas.drawBitmap(bmp, screenCoords.x - BALLOON_HEIGHT/3, screenCoords.y - BALLOON_HEIGHT, paint1);
+                
                 canvas.drawCircle(screenCoords.x, screenCoords.y, 9, paint1);
                 canvas.drawText(Integer.toString(i + 1),
                         screenCoords.x - 4,
@@ -45,4 +60,37 @@ public class MyOverlay extends Overlay {
         		+ "/" + Double.toString(point.getLongitudeE6()/1000000.0));
         return super.onTap(point, view);
     }
+    
+    /*
+    //Geocoding example
+    @Override
+    public boolean onTouchEvent(MotionEvent event, MapView mapView) 
+    {   
+        if (event.getAction() == MotionEvent.ACTION_UP) {                
+            GeoPoint p = mapView.getProjection().fromPixels(
+                (int) event.getX(),
+                (int) event.getY());
+            Geocoder geoCoder = new Geocoder(
+                mMap.getBaseContext(), Locale.getDefault());
+            try {
+                List<Address> addresses = geoCoder.getFromLocation(
+                    p.getLatitudeE6()  / 1E6, 
+                    p.getLongitudeE6() / 1E6, 1);
+                String add = "";
+                if (addresses.size() > 0) 
+                {
+                	//Display all lines of first address
+                    for (int i=0; i<addresses.get(0).getMaxAddressLineIndex(); i++)
+                       add += addresses.get(0).getAddressLine(i) + "\n";
+                }
+                mMap.notifyUser(add);
+            }
+            catch (IOException e) {                
+                e.printStackTrace();
+            }   
+            return true;
+        }
+        else                
+            return false;
+    }*/
 }
