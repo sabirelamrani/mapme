@@ -17,12 +17,12 @@ and replace _YOUR_API_KEY_HERE_ with your generated key.
 The key must be generated using the same fingerprint in your Eclipse Android debug store
 (more info here: http://mobiforge.com/developing/story/using-google-maps-android):
 
-1) Find your debug.keystore file. You will get this under USER_HOME\Local Settings\Application Data\android  directory.
+1) Find your debug.keystore file. It's usually in directory USER_HOME\Local Settings\Application Data\android
 
-2) Use keytool tool to generate Certificate fingerprint (MD5). Use following command on command prompt
+2) Use the keytool to retrieve your certificate fingerprint (MD5). Use the following command on the command prompt:
 
 keytool -list -alias androiddebugkey -keystore .keystore -storepass android -keypass android
 
-3) Go to this page: http://code.google.com/android/maps-api-signup.html.  Put your Certificate fingerprint (MD5) and get your API key for android GMap application.
+3) Go to this page: http://code.google.com/android/maps-api-signup.html. Enter your certificate fingerprint (MD5) and get your API key for your Android maps application.
 
 4) Replace _YOUR_API_KEY_HERE_ with your API key.
