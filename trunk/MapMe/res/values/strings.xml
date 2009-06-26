@@ -7,9 +7,12 @@
     <string name="satellite">Satellite View</string>
     <string name="traffic">Traffic View</string>
     <string name="streetview">Street View</string>
+    <string name="bookmarkview">Show Bookmarks</string>
+    <string name="settings">Settings</string>
     <string name="find">Find Location</string>
     <string name="center_gps">My Location</string>
-    <string name="track_gps">Track Me</string>
+    <string name="track_gps">Track Location</string>
+    <string name="nocompass">Disable Compass</string>
     <string name="save">Save Location</string>
     <string name="saveButton">Save</string>
     <string name="edit">Bookmarks</string>
