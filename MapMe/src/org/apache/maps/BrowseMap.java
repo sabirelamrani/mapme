@@ -27,12 +27,15 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
+import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.Projection;
 
 public class BrowseMap extends MapActivity implements LocationListener {
 	private MapView mMapView;
 	private Db4oHelper db4oHelper;
+	private MyLocationOverlay myLocationOverlay;
+	private BookmarkOverlay bookmarkOverlay;
 
 	private static final int GET_SEARCH_TEXT = 0;
 	private static final int GET_BOOKMARK_INFO = 1;
@@ -57,15 +60,16 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public static final int SATELLITE_INDEX = Menu.FIRST + 6;
 	public static final int TRAFFIC_INDEX = Menu.FIRST + 7;
 	public static final int STREETVIEW_INDEX = Menu.FIRST + 8;
-	public static final int CENTER_LOCATION_INDEX = Menu.FIRST + 9;
-	public static final int TRACK_LOCATION_INDEX = Menu.FIRST + 10;
+	public static final int BOOKMARK_VIEW_INDEX = Menu.FIRST + 9;
+	public static final int CENTER_LOCATION_INDEX = Menu.FIRST + 10;
+	public static final int TRACK_LOCATION_INDEX = Menu.FIRST + 11;
+	public static final int SETTINGS_INDEX = Menu.FIRST + 12;
+	public static final int COMPASS_INDEX = Menu.FIRST + 13;
 	
 	public static final String BM_NAME = "name";
 	public static final String BM_DESC = "desc";
 
 	protected static MapBookmark bookmark;
-	
-	protected static boolean trackLocation = false;
 	
 	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
 			(int) (-122.256527255 * 1e6)); //Versant (Redwood City)
@@ -77,9 +81,21 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
 		resetToHomePoint();
-		//mMapView.invalidate(); //necessary?
-		mapOverlays().add(new MyOverlay(this));
+		//Initialize db4o
 		dbHelper();
+		//Init removable overlays
+		myLocationOverlay = new MyLocationOverlay(this, mMapView);
+		myLocationOverlay.enableCompass();
+		myLocationOverlay.disableMyLocation();
+		myLocationOverlay.runOnFirstFix(new Runnable() {
+            public void run() {
+                mapController().animateTo(myLocationOverlay.getMyLocation());
+            }
+        });
+		mapOverlays().add(myLocationOverlay);
+        bookmarkOverlay = new BookmarkOverlay(this);
+		//Add permanent map overlays
+		mapOverlays().add(new SearchOverlay(this));
 	}
 	
 	protected List<Overlay> mapOverlays(){
@@ -119,24 +135,25 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 
-		//menu.add(0, ZOOM_IN_INDEX, ZOOM_IN_INDEX, R.string.zoom_in);
-		//menu.add(0, ZOOM_OUT_INDEX, ZOOM_OUT_INDEX, R.string.zoom_out);
 		menu.add(0, FIND_INDEX, FIND_INDEX, R.string.find).setIcon(R.drawable.findonmap);
 		menu.add(0, SAVE_INDEX, SAVE_INDEX, R.string.save).setIcon(R.drawable.save);
 		menu.add(0, EDIT_INDEX, EDIT_INDEX, R.string.edit).setIcon(R.drawable.bookmarks);
-		//menu.add(0, MAP_MODE_INDEX, MAP_MODE_INDEX, R.string.map_mode);
-		//menu.add(0, SATELLITE_INDEX, SATELLITE_INDEX, R.string.satellite);
-		//menu.add(0, TRAFFIC_INDEX, TRAFFIC_INDEX, R.string.traffic);
-		//menu.add(0, STREETVIEW_INDEX, STREETVIEW_INDEX, R.string.streetview);
-		menu.add(0, CENTER_LOCATION_INDEX, CENTER_LOCATION_INDEX, R.string.center_gps).setIcon(R.drawable.mylocation);
-		menu.add(0, TRACK_LOCATION_INDEX, TRACK_LOCATION_INDEX, R.string.track_gps).setIcon(R.drawable.trackme);
+		
 		//Map Mode submenu
 		SubMenu subMenu = menu.addSubMenu(0, MAP_MODE_INDEX, MAP_MODE_INDEX, R.string.map_mode).setIcon(R.drawable.mapmode);
 		subMenu.add(0, SATELLITE_INDEX, SATELLITE_INDEX, R.string.satellite);
 		subMenu.add(0, TRAFFIC_INDEX, TRAFFIC_INDEX, R.string.traffic);
 		subMenu.add(0, STREETVIEW_INDEX, STREETVIEW_INDEX, R.string.streetview);
 		subMenu.setGroupCheckable(0, true, true);
-
+		
+		//Settings submenu
+		SubMenu subMenu2 = menu.addSubMenu(0, SETTINGS_INDEX, SETTINGS_INDEX, R.string.settings).setIcon(R.drawable.settings);
+		//subMenu2.add(0, CENTER_LOCATION_INDEX, CENTER_LOCATION_INDEX, R.string.center_gps).setIcon(R.drawable.mylocation);
+		subMenu2.add(0, BOOKMARK_VIEW_INDEX, BOOKMARK_VIEW_INDEX, R.string.bookmarkview);
+		subMenu2.add(0, TRACK_LOCATION_INDEX, TRACK_LOCATION_INDEX, R.string.track_gps).setIcon(R.drawable.trackme);
+		subMenu2.add(0, COMPASS_INDEX, COMPASS_INDEX, R.string.nocompass);
+		subMenu.setGroupCheckable(0, true, true);
+		
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -147,29 +164,31 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		case ZOOM_OUT_INDEX:
 			return performZoomOut();
 		case SATELLITE_INDEX:
-			if (item.isChecked()) 
-				item.setChecked(false);
-			else 
-				item.setChecked(true);
+			item.setChecked(!item.isChecked());
 			return performToggleSatellite();
 		case TRAFFIC_INDEX:
-			if (item.isChecked()) 
-				item.setChecked(false);
-			else 
-				item.setChecked(true);
+			item.setChecked(!item.isChecked());
 			return performToggleTraffic();
 		case STREETVIEW_INDEX:
-			if (item.isChecked()) 
-				item.setChecked(false);
-			else 
-				item.setChecked(true);
+			item.setChecked(!item.isChecked());
 			return performToggleStreetView();
 		case FIND_INDEX:
 			return performFindLocation();
 		case CENTER_LOCATION_INDEX:
 			return performCenterOnLocation();
+		case BOOKMARK_VIEW_INDEX:
+			item.setChecked(!item.isChecked());
+			return performBookmarkView(item.isChecked());
 		case TRACK_LOCATION_INDEX:
-			return performTrackLocation();
+			item.setChecked(!item.isChecked());
+			return performTrackLocation(item.isChecked());
+		case COMPASS_INDEX:
+			item.setChecked(!item.isChecked());
+			if(item.isChecked())
+				myLocationOverlay.disableCompass();
+			else
+				myLocationOverlay.enableCompass();
+			return true;
 		case SAVE_INDEX:
 			return performCreateBookmark();
 		case EDIT_INDEX:
@@ -193,8 +212,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			return performFindLocation();
 		} else if (keyCode == KeyEvent.KEYCODE_G) {
 			return performCenterOnLocation();
-		} else if (keyCode == KeyEvent.KEYCODE_X) {
-			return performTrackLocation();
 		} else if (keyCode == KeyEvent.KEYCODE_C) {
 			return performCreateBookmark();
 		} else if (keyCode == KeyEvent.KEYCODE_E) {
@@ -233,21 +250,18 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public boolean performToggleSatellite() {
 		// Switch on/off the satellite images
 		mMapView.setSatellite(!mMapView.isSatellite());
-		//mMapView.invalidate();
 		return true;
 	}
 
 	public boolean performToggleTraffic() {
 		// Switch on/off traffic overlays
 		mMapView.setTraffic(!mMapView.isTraffic());
-		//mMapView.invalidate();
 		return true;
 	}
 	
 	public boolean performToggleStreetView() {
 		// Switch on/off StreetView mode
 		mMapView.setStreetView(!mMapView.isStreetView());
-		//mMapView.invalidate();
 		return true;
 	}
 
@@ -262,7 +276,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		//Get location manager
 	 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 	 	//Register this as location listener
-	 	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 500.0f, this);
+	 	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 1, this);//3 secs, 10m
 	 	//Select best provider (will try GPS first, then network triangulation)
 	 	String provider = locationManager.getBestProvider(new Criteria(), true);
 	 	
@@ -279,7 +293,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		Location currentLocation = locationManager.getLastKnownLocation(provider);
 		
 		if(currentLocation == null){
-			notifyUser("Unknown location");
+			notifyUser("Unknown location");//Usual response in the emulator if there's no mock location
 			return false;
 		}
 		// Get point
@@ -288,7 +302,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 				(int) (currentLocation.getLongitude() * 1e6));
 		// Center on map
 		animateTo(point);
-
 		return true;
 	}
 	
@@ -298,13 +311,33 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			double lon = location.getLongitude();
 			GeoPoint p = new GeoPoint((int) lat * 1000000, (int) lon * 1000000);
 			//notifyUser("Location: " + Double.toString(lat) + "/" + Double.toString(lon));
-			if(trackLocation)
-				animateTo(p);
+			animateTo(p);
 		}
 	}
 
-	public boolean performTrackLocation() {
-		trackLocation = !trackLocation;
+	public boolean performTrackLocation(boolean isChecked) {
+		if(isChecked){
+			myLocationOverlay.enableMyLocation();
+	        //performCenterOnLocation();
+		}
+		else{
+			//mapOverlays().remove(myLocationOverlay);
+			myLocationOverlay.disableMyLocation();
+			//Get location manager
+		 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		 	locationManager.removeUpdates(this);
+		}
+		return true;
+	}
+	
+	public boolean performBookmarkView(boolean isChecked) {
+		if(isChecked){
+	        mapOverlays().add(bookmarkOverlay);
+		}
+		else{
+			mapOverlays().remove(bookmarkOverlay);
+		}
+		mMapView.invalidate();
 		return true;
 	}
 
@@ -359,7 +392,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		GeoPoint p = new GeoPoint(((int) (1e6 * addr.getLatitude())),
 				((int) (1e6 * addr.getLongitude())));
 		animateTo(p);
-		mMapView.invalidate();
 	}
 
 	@Override

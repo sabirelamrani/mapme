@@ -1,32 +1,23 @@
 package org.apache.maps;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.location.Address;
-import android.location.Geocoder;
-import android.view.MotionEvent;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
-public class MyOverlay extends Overlay {
-    
-	private static final int BALLOON_HEIGHT = 34;
-	private static final int BALLOON_WIDTH = 37;
+public class SearchOverlay extends Overlay {
 	
 	BrowseMap mMap;
     Paint paint1 = new Paint();
     Paint paint2 = new Paint();
 
-    public MyOverlay(BrowseMap map) {
+    public SearchOverlay(BrowseMap map) {
         mMap = map;
         paint2.setARGB(255, 255, 255, 255);
     }
@@ -34,17 +25,13 @@ public class MyOverlay extends Overlay {
     public void draw(Canvas canvas, MapView map, boolean b) {
         super.draw(canvas, map, b);
 
-        List<Address>addresses= mMap.getAddresses();
+        List<Address> addresses = mMap.getAddresses();
         if (addresses != null && addresses.size() > 0) {
             for (int i = 0; i < addresses.size(); i++) {
                 Address addr = addresses.get(i);
                 GeoPoint point = new GeoPoint((((int)(addr.getLatitude() * 1e6))),
                         (((int)(1e6 * addr.getLongitude()))));
                 Point screenCoords = mMap.getProjection().toPixels(point, null);
-                
-                //---add balloon---
-                //Bitmap bmp = BitmapFactory.decodeResource(mMap.getResources(), R.drawable.pin);            
-                //canvas.drawBitmap(bmp, screenCoords.x - BALLOON_HEIGHT/3, screenCoords.y - BALLOON_HEIGHT, paint1);
                 
                 canvas.drawCircle(screenCoords.x, screenCoords.y, 9, paint1);
                 canvas.drawText(Integer.toString(i + 1),
