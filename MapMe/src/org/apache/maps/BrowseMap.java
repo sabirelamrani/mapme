@@ -15,10 +15,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Message;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
+import android.view.View;
 import android.widget.Toast;
 
 import com.db4o.android.Db4oHelper;
@@ -81,6 +83,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		setContentView(R.layout.mapview);
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
+		addContextMenu();
 		resetToHomePoint();
 		
 		//Initialize db4o
@@ -242,7 +245,28 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		}
 		return false;
 	}
-
+	
+	public void addContextMenu(){
+		mMapView.setLongClickable(true);
+		mMapView.setOnLongClickListener(new View.OnLongClickListener(){
+				public boolean onLongClick(View v) {
+					notifyUser("Long click!");
+					mMapView.showContextMenu();
+					return true;
+				}
+		});
+		mMapView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+				public void onCreateContextMenu(ContextMenu menu, View v, 
+						ContextMenu.ContextMenuInfo menuInfo) {
+					menu.setHeaderTitle("Menu");
+					menu.add(0, 1, 0, "Add");
+					menu.add(0, 2, 0, "Delete");
+					menu.add(0, 3, 0, "Edit");
+				}
+		});
+		registerForContextMenu(mMapView);
+	}
+	
 	public List<Address> getAddresses() {
 		return addresses;
 	}
@@ -315,11 +339,12 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	
 	public void onLocationChanged(Location location) {
 		if (location != null) {
-			double lat = location.getLatitude();
-			double lon = location.getLongitude();
-			GeoPoint p = new GeoPoint((int) lat * 1000000, (int) lon * 1000000);
+			int lat = (int) (location.getLatitude() * 1E6);
+			int lon = (int) (location.getLongitude() * 1E6);
+			GeoPoint p = new GeoPoint(lat, lon);
 			//notifyUser("Location: " + Double.toString(lat) + "/" + Double.toString(lon));
-			animateTo(p);
+			//animateTo(p);
+			mapController().setCenter(p);
 		}
 	}
 	

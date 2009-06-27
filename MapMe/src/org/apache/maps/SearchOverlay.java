@@ -1,11 +1,15 @@
 package org.apache.maps;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.location.Address;
+import android.location.Geocoder;
+import android.view.MotionEvent;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
@@ -41,12 +45,12 @@ public class SearchOverlay extends Overlay {
         }
     }
     
-    @Override
+    /*@Override
     public boolean onTap(GeoPoint point, MapView view) {
         mMap.notifyUser("Tapped: " + Double.toString(point.getLatitudeE6()/1.0E6) 
         		+ "/" + Double.toString(point.getLongitudeE6()/1.0E6));
         return super.onTap(point, view);
-    }
+    }*/
     
     /*
     //Geocoding example
@@ -79,5 +83,6 @@ public class SearchOverlay extends Overlay {
         }
         else                
             return false;
+            //TODO call handler super?
     }*/
 }
