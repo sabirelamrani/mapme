@@ -8,7 +8,11 @@
     
     <application android:icon="@drawable/compass" android:debuggable="true">
     	<uses-library android:name="com.google.android.maps" />
-        <activity class=".BrowseMap" android:name="BrowseMap" android:label="MapMe">
+        <activity 
+        	class=".BrowseMap" 
+        	android:name="BrowseMap" 
+        	android:label="MapMe" 
+        	android:screenOrientation="sensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
