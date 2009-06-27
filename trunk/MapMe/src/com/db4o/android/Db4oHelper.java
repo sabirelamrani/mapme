@@ -128,6 +128,22 @@ public class Db4oHelper {
             }
         });
     }
+    
+    @SuppressWarnings("serial")
+	public List<MapBookmark> getNearbyBookmarks(
+    		final GeoPoint mapCenter, final int tolerance){
+    	return db().query(new Predicate<MapBookmark>() {
+            public boolean match(MapBookmark candidate) {
+            	boolean inLatitude = 
+            		(candidate.latitude <= (mapCenter.getLatitudeE6() + tolerance)) &&
+            		(candidate.latitude >= (mapCenter.getLatitudeE6() - tolerance));
+            	boolean inLongitude = 
+            		(candidate.longitude <= (mapCenter.getLongitudeE6() + tolerance)) &&
+            		(candidate.longitude >= (mapCenter.getLongitudeE6() - tolerance));
+                return inLatitude && inLongitude;
+            }
+        });
+    }
 
     public void deleteBookmark(String name) {
         //Search by name
