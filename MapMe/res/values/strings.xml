@@ -12,7 +12,7 @@
     <string name="find">Find Location</string>
     <string name="center_gps">My Location</string>
     <string name="track_gps">Track Location</string>
-    <string name="nocompass">Disable Compass</string>
+    <string name="compass">Show Compass</string>
     <string name="save">Save Location</string>
     <string name="saveButton">Save</string>
     <string name="edit">Bookmarks</string>

@@ -43,7 +43,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	private static final int RESULT_GOTO_MAP = 3;
 
 	public static int MAX_RESULTS = 9;
-
+	public static final String BM_NAME = "name";
+	public static final String BM_DESC = "desc";
 	public static final String BKM_LATITUDE = "lat";
 	public static final String BKM_LONGITUDE = "lon";
 
@@ -66,9 +67,9 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public static final int SETTINGS_INDEX = Menu.FIRST + 12;
 	public static final int COMPASS_INDEX = Menu.FIRST + 13;
 	
-	public static final String BM_NAME = "name";
-	public static final String BM_DESC = "desc";
-
+	protected static boolean TRACKING_MODE = false;
+	protected static boolean COMPASS_MODE = true;
+	protected static boolean BOOKMARK_MODE = false;
 	protected static MapBookmark bookmark;
 	
 	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
@@ -81,21 +82,37 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
 		resetToHomePoint();
+		
 		//Initialize db4o
 		dbHelper();
-		//Init removable overlays
+		
+		//Create removable overlays
+		configureTracking();
+		configureCompass();
+		configureBookmarkOverlay();
+        
+		//Add permanent map overlays
+		mapOverlays().add(new SearchOverlay(this));
+	}
+	
+	private void configureTracking(){
 		myLocationOverlay = new MyLocationOverlay(this, mMapView);
-		myLocationOverlay.enableCompass();
-		myLocationOverlay.disableMyLocation();
 		myLocationOverlay.runOnFirstFix(new Runnable() {
             public void run() {
                 mapController().animateTo(myLocationOverlay.getMyLocation());
             }
         });
 		mapOverlays().add(myLocationOverlay);
-        bookmarkOverlay = new BookmarkOverlay(this);
-		//Add permanent map overlays
-		mapOverlays().add(new SearchOverlay(this));
+		performTrackLocation(TRACKING_MODE);
+	}
+	
+	private void configureCompass(){
+		performCompassMode(COMPASS_MODE);
+	}
+	
+	private void configureBookmarkOverlay(){
+		bookmarkOverlay = new BookmarkOverlay(this);
+		performBookmarkView(BOOKMARK_MODE);
 	}
 	
 	protected List<Overlay> mapOverlays(){
@@ -149,9 +166,9 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		//Settings submenu
 		SubMenu subMenu2 = menu.addSubMenu(0, SETTINGS_INDEX, SETTINGS_INDEX, R.string.settings).setIcon(R.drawable.settings);
 		//subMenu2.add(0, CENTER_LOCATION_INDEX, CENTER_LOCATION_INDEX, R.string.center_gps).setIcon(R.drawable.mylocation);
-		subMenu2.add(0, BOOKMARK_VIEW_INDEX, BOOKMARK_VIEW_INDEX, R.string.bookmarkview);
-		subMenu2.add(0, TRACK_LOCATION_INDEX, TRACK_LOCATION_INDEX, R.string.track_gps).setIcon(R.drawable.trackme);
-		subMenu2.add(0, COMPASS_INDEX, COMPASS_INDEX, R.string.nocompass);
+		subMenu2.add(0, BOOKMARK_VIEW_INDEX, BOOKMARK_VIEW_INDEX, R.string.bookmarkview).setChecked(BOOKMARK_MODE);
+		subMenu2.add(0, TRACK_LOCATION_INDEX, TRACK_LOCATION_INDEX, R.string.track_gps).setIcon(R.drawable.trackme).setChecked(TRACKING_MODE);
+		subMenu2.add(0, COMPASS_INDEX, COMPASS_INDEX, R.string.compass).setChecked(COMPASS_MODE);
 		subMenu.setGroupCheckable(0, true, true);
 		
 		return super.onCreateOptionsMenu(menu);
@@ -184,10 +201,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			return performTrackLocation(item.isChecked());
 		case COMPASS_INDEX:
 			item.setChecked(!item.isChecked());
-			if(item.isChecked())
-				myLocationOverlay.disableCompass();
-			else
-				myLocationOverlay.enableCompass();
+			performCompassMode(item.isChecked());
 			return true;
 		case SAVE_INDEX:
 			return performCreateBookmark();
@@ -234,14 +248,12 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 
 	public boolean performZoomIn() {
-		// Zoom In
 		int level = mMapView.getZoomLevel();
 		mapController().setZoom(level + 1);
 		return true;
 	}
 
 	public boolean performZoomOut() {
-		// Zoom Out
 		int level = mMapView.getZoomLevel();
 		mapController().setZoom(level - 1);
 		return true;
@@ -279,19 +291,15 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	 	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 1, this);//3 secs, 10m
 	 	//Select best provider (will try GPS first, then network triangulation)
 	 	String provider = locationManager.getBestProvider(new Criteria(), true);
-	 	
 	 	if (provider == null) {
 			notifyUser("No location provider found");
 			return false;
 		}
-	 	
 	 	if(!locationManager.isProviderEnabled(provider)){
 			notifyUser(provider + " is disabled");
 			return false;
 		}
-	 	
 		Location currentLocation = locationManager.getLastKnownLocation(provider);
-		
 		if(currentLocation == null){
 			notifyUser("Unknown location");//Usual response in the emulator if there's no mock location
 			return false;
@@ -314,8 +322,21 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			animateTo(p);
 		}
 	}
+	
+	public boolean performCompassMode(boolean isChecked) {
+		COMPASS_MODE = isChecked;
+		if(isChecked){
+			myLocationOverlay.enableCompass();
+		}
+		else{
+			myLocationOverlay.disableCompass();
+		}
+		mMapView.invalidate();
+		return true;
+	}
 
 	public boolean performTrackLocation(boolean isChecked) {
+		TRACKING_MODE = isChecked;
 		if(isChecked){
 			myLocationOverlay.enableMyLocation();
 	        //performCenterOnLocation();
@@ -327,10 +348,12 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		 	locationManager.removeUpdates(this);
 		}
+		mMapView.invalidate();
 		return true;
 	}
 	
 	public boolean performBookmarkView(boolean isChecked) {
+		BOOKMARK_MODE = isChecked;
 		if(isChecked){
 	        mapOverlays().add(bookmarkOverlay);
 		}
@@ -375,10 +398,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 					addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
 					if (addresses.size() > 0) 
 						goTo(0);//TODO offer list with all locations for selection
-					else
-						notifyUser("No location found!");
+					//else
+						//notifyUser("No location found!");//TODO Report not found
 				} catch (IOException ioe) {
-					notifyUser("Search failed:" + ioe.getMessage());
+					//notifyUser("Search failed:" + ioe.getMessage());
 				}
 			}
 
@@ -449,8 +472,20 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	@Override
 	protected void onPause() {
 		super.onPause();
+		if(TRACKING_MODE)
+			myLocationOverlay.disableMyLocation();
+		if(COMPASS_MODE)
+			myLocationOverlay.disableCompass();
 		dbHelper().close();
 		db4oHelper = null;
+	}
+	
+	@Override protected void onResume() { 
+		super.onResume();
+		if(TRACKING_MODE && !myLocationOverlay.isMyLocationEnabled())
+			myLocationOverlay.enableMyLocation();
+		if(COMPASS_MODE && !myLocationOverlay.isCompassEnabled())
+			myLocationOverlay.enableCompass();
 	}
 
 	@Override
@@ -465,26 +500,14 @@ public class BrowseMap extends MapActivity implements LocationListener {
 
 	public void onProviderDisabled(String arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	public void onProviderEnabled(String provider) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 		// TODO Auto-generated method stub
-		
 	}
-	
-	/*
-	 * @Override protected void onPause() { super.onPause(); dbHelper().close();
-	 * db4oHelper = null; }
-	 */
-
-	/*
-	 * @Override protected void onResume() { super.onResume(); dbHelper();
-	 * //populateFields(); }
-	 */
+	 
 }
