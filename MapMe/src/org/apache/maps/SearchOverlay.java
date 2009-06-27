@@ -29,8 +29,8 @@ public class SearchOverlay extends Overlay {
         if (addresses != null && addresses.size() > 0) {
             for (int i = 0; i < addresses.size(); i++) {
                 Address addr = addresses.get(i);
-                GeoPoint point = new GeoPoint((((int)(addr.getLatitude() * 1e6))),
-                        (((int)(1e6 * addr.getLongitude()))));
+                GeoPoint point = new GeoPoint((((int)(addr.getLatitude() * 1E6))),
+                        (((int)(1E6 * addr.getLongitude()))));
                 Point screenCoords = mMap.getProjection().toPixels(point, null);
                 
                 canvas.drawCircle(screenCoords.x, screenCoords.y, 9, paint1);
@@ -43,8 +43,8 @@ public class SearchOverlay extends Overlay {
     
     @Override
     public boolean onTap(GeoPoint point, MapView view) {
-        mMap.notifyUser("Tapped: " + Double.toString(point.getLatitudeE6()/1000000.0) 
-        		+ "/" + Double.toString(point.getLongitudeE6()/1000000.0));
+        mMap.notifyUser("Tapped: " + Double.toString(point.getLatitudeE6()/1.0E6) 
+        		+ "/" + Double.toString(point.getLongitudeE6()/1.0E6));
         return super.onTap(point, view);
     }
     

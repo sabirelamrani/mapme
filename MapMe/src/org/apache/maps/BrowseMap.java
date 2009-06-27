@@ -32,8 +32,8 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.Projection;
 
 public class BrowseMap extends MapActivity implements LocationListener {
-	private MapView mMapView;
-	private Db4oHelper db4oHelper;
+	protected MapView mMapView;
+	protected Db4oHelper db4oHelper;
 	private MyLocationOverlay myLocationOverlay;
 	private BookmarkOverlay bookmarkOverlay;
 
@@ -69,7 +69,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	
 	protected static boolean TRACKING_MODE = false;
 	protected static boolean COMPASS_MODE = true;
-	protected static boolean BOOKMARK_MODE = false;
+	protected static boolean BOOKMARK_MODE = true;
 	protected static MapBookmark bookmark;
 	
 	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
@@ -140,7 +140,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		return mMapView.getController();
 	}
 
-	private Db4oHelper dbHelper() {
+	protected Db4oHelper dbHelper() {
 		if (db4oHelper == null) {
 			db4oHelper = new Db4oHelper(this);
 			db4oHelper.db();
@@ -306,8 +306,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		}
 		// Get point
 		GeoPoint point = new GeoPoint(
-				(int) (currentLocation.getLatitude() * 1e6), 
-				(int) (currentLocation.getLongitude() * 1e6));
+				(int) (currentLocation.getLatitude() * 1E6), 
+				(int) (currentLocation.getLongitude() * 1E6));
 		// Center on map
 		animateTo(point);
 		return true;
@@ -325,12 +325,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	
 	public boolean performCompassMode(boolean isChecked) {
 		COMPASS_MODE = isChecked;
-		if(isChecked){
+		if(isChecked)
 			myLocationOverlay.enableCompass();
-		}
-		else{
+		else
 			myLocationOverlay.disableCompass();
-		}
 		mMapView.invalidate();
 		return true;
 	}
@@ -354,12 +352,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	
 	public boolean performBookmarkView(boolean isChecked) {
 		BOOKMARK_MODE = isChecked;
-		if(isChecked){
+		if(isChecked)
 	        mapOverlays().add(bookmarkOverlay);
-		}
-		else{
+		else
 			mapOverlays().remove(bookmarkOverlay);
-		}
 		mMapView.invalidate();
 		return true;
 	}
@@ -439,12 +435,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 							Bookmark.current.getZoomLevel(),
 							Bookmark.current.isSatellite(),
 							Bookmark.current.isTraffic());
-				} else {
+				} else
 					notifyUser("Please enter a name");
-				}
-			} else {
+			} else
 				notifyUser("Please enter a name");
-			}
 		} else if (requestCode == EDIT_BOOKMARKS) {
 			if (resultCode == RESULT_GOTO_MAP) {
 				if (mMapView.isSatellite() != BrowseMap.bookmark.isSatellite())
