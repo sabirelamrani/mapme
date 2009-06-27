@@ -9,7 +9,9 @@ import android.util.Log;
 import com.db4o.android.MapBookmark;
 import com.db4o.*;
 import com.db4o.config.*;
+import com.db4o.query.Predicate;
 import com.db4o.query.Query;
+import com.google.android.maps.GeoPoint;
 
 
 /**
@@ -58,12 +60,12 @@ public class Db4oHelper {
 	/**
      * Close database connection
      */
-    public void close() {
+	public void close() {
     	if(oc != null)
     		oc.close();
     }
     
-    public void setBookmark(
+	public void setBookmark(
     				String name, 
     				String description, 
     				int latitude,
@@ -85,7 +87,7 @@ public class Db4oHelper {
     	db().commit();
     }
     
-    public MapBookmark getBookmark(String name){
+	public MapBookmark getBookmark(String name){
     	MapBookmark proto = new MapBookmark(name);
     	ObjectSet<MapBookmark> result = db().queryByExample(proto);
     	if(result.hasNext()){
@@ -104,11 +106,27 @@ public class Db4oHelper {
     }
     
     @SuppressWarnings("unchecked")
-	private ObjectSet getBookmarks(){
+	public ObjectSet getBookmarks(){
     	Query query = db().query();
     	query.constrain(MapBookmark.class);
     	query.descend("name").orderAscending();
     	return query.execute();
+    }
+    
+    @SuppressWarnings("serial")
+	public List<MapBookmark> getNearbyBookmarks(
+    		final GeoPoint mapCenter, final int latitudeSpan, final int longitudeSpan){
+    	return db().query(new Predicate<MapBookmark>() {
+            public boolean match(MapBookmark candidate) {
+            	boolean inLatitude = 
+            		(candidate.latitude <= (mapCenter.getLatitudeE6() + latitudeSpan/2)) &&
+            		(candidate.latitude >= (mapCenter.getLatitudeE6() - latitudeSpan/2));
+            	boolean inLongitude = 
+            		(candidate.longitude <= (mapCenter.getLongitudeE6() + longitudeSpan/2)) &&
+            		(candidate.longitude >= (mapCenter.getLongitudeE6() - longitudeSpan/2));
+                return inLatitude && inLongitude;
+            }
+        });
     }
 
     public void deleteBookmark(String name) {

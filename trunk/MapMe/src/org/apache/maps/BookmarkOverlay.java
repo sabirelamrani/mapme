@@ -1,5 +1,6 @@
 package org.apache.maps;
 
+import java.util.Iterator;
 import java.util.List;
 
 import android.graphics.Bitmap;
@@ -9,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.location.Address;
 
+import com.db4o.android.MapBookmark;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
@@ -19,28 +21,32 @@ public class BookmarkOverlay extends Overlay {
 	//private static final int BALLOON_WIDTH = 37;
 	
 	BrowseMap mMap;
+	MapView mView;
     Paint paint = new Paint();
 
     public BookmarkOverlay(BrowseMap map) {
         mMap = map;
+        mView = map.mMapView;
     }
 
     public void draw(Canvas canvas, MapView map, boolean b) {
         super.draw(canvas, map, b);
 
-        //List<Address> addresses = mMap.getAddresses();
-        //if (addresses != null && addresses.size() > 0) {
-            //for (int i = 0; i < addresses.size(); i++) {
-                //Address addr = addresses.get(i);
-                //GeoPoint point = new GeoPoint((((int)(addr.getLatitude() * 1e6))),
-                        //(((int)(1e6 * addr.getLongitude()))));
-        		GeoPoint point = BrowseMap.HOME_POINT;
-                Point screenCoords = mMap.getProjection().toPixels(point, null);     
-                //---add balloon---
-                Bitmap bmp = BitmapFactory.decodeResource(mMap.getResources(), R.drawable.pin);            
-                canvas.drawBitmap(bmp, screenCoords.x - BALLOON_HEIGHT/3, screenCoords.y - BALLOON_HEIGHT, paint);
-            //}
-        //}
+        GeoPoint mapCenter = mView.getMapCenter();
+        int latitudeSpan = mView.getLatitudeSpan();
+        int longitudeSpan = mView.getLongitudeSpan();
+        List<MapBookmark> bookmarks = 
+        	mMap.dbHelper().getNearbyBookmarks(mapCenter, latitudeSpan, longitudeSpan);
+        Iterator<MapBookmark> iterator = bookmarks.iterator();
+        
+        while(iterator.hasNext()){
+        	MapBookmark bookmark = iterator.next();
+        	GeoPoint point = new GeoPoint(bookmark.getLatitude(), bookmark.getLongitude());
+        	Point screenCoords = mMap.getProjection().toPixels(point, null);     
+            //---add balloon---
+            Bitmap bmp = BitmapFactory.decodeResource(mMap.getResources(), R.drawable.pin);            
+            canvas.drawBitmap(bmp, screenCoords.x - BALLOON_HEIGHT/3, screenCoords.y - BALLOON_HEIGHT, paint);
+        }
     }
     /*
     @Override

@@ -78,14 +78,12 @@ public class Bookmark extends Activity {
 			if (entry != null) {
 				nameText.setText(entry.name);
 				descriptionText.setText(entry.description);
-				latitudeText.setText(Double.toString(entry.getLatitude()/1000000.0));
-				longitudeText.setText(Double.toString(entry.getLongitude()/1000000.0));
+				latitudeText.setText(Double.toString(entry.getLatitude()/1.0E6));
+				longitudeText.setText(Double.toString(entry.getLongitude()/1.0E6));
 			}
 		} else {
-			latitudeText.setText(Double.toString(Bookmark.current
-					.getLatitude()/1000000.0));
-			longitudeText.setText(Double.toString(Bookmark.current
-					.getLongitude()/1000000.0));
+			latitudeText.setText(Double.toString(Bookmark.current.getLatitude()/1.0E6));
+			longitudeText.setText(Double.toString(Bookmark.current.getLongitude()/1.0E6));
 		}
 	}
 }
