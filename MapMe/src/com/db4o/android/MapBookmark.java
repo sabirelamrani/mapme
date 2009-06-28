@@ -25,6 +25,23 @@ public class MapBookmark {
 	public MapBookmark(String name){
 		this.name = name;
 	}
+	
+	public MapBookmark(
+			String name, 
+			String description, 
+			int latitude, 
+			int longitude,
+			int zoomLevel,
+			boolean sattellite,
+			boolean traffic){
+		this.name = name;
+		this.description = description;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.zoomLevel = zoomLevel;
+		this.satellite = sattellite;
+		this.traffic = traffic;
+	}
 
 	/**
 	 * @return the name

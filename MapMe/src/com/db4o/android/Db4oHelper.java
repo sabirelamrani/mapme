@@ -64,6 +64,17 @@ public class Db4oHelper {
     	if(oc != null)
     		oc.close();
     }
+	
+	public void setBookmark(MapBookmark bookmark){
+		setBookmark(
+				bookmark.name, 
+				bookmark.description, 
+				bookmark.latitude,
+				bookmark.longitude,
+				bookmark.zoomLevel,
+				bookmark.satellite,
+				bookmark.traffic);
+	}
     
 	public void setBookmark(
     				String name, 
@@ -90,9 +101,8 @@ public class Db4oHelper {
 	public MapBookmark getBookmark(String name){
     	MapBookmark proto = new MapBookmark(name);
     	ObjectSet<MapBookmark> result = db().queryByExample(proto);
-    	if(result.hasNext()){
+    	if(result.hasNext())
     		return (MapBookmark)result.next();
-    	}
     	return null;
     }
     

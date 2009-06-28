@@ -2,6 +2,7 @@ package org.apache.maps;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -75,8 +76,9 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	
 	protected static MapBookmark bookmark;
 	
-	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
-			(int) (-122.256527255 * 1e6)); //Versant (Redwood City)
+	protected static final GeoPoint HOME_POINT = new GeoPoint(
+			(int) (37.799800872802734 * 1e6), 
+			(int) (-122.40699768066406 * 1e6)); //North Beach
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -89,6 +91,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		//Initialize db4o
 		dbHelper();
 		if(savedInstanceState == null){
+			Iterator<MapBookmark> bookmarks = mockBookmarks().iterator();
+			while(bookmarks.hasNext()){
+				dbHelper().setBookmark(bookmarks.next());
+			}
 			resetToHomePoint();
 		}
 		//Create removable overlays
@@ -137,7 +143,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		mMapView.setTraffic(false);
 		mMapView.setStreetView(false);
 		animateTo(HOME_POINT);
-		mapController().setZoom(17);
+		mapController().setZoom(15);
 	}
 	
 	protected MapController mapController(){
@@ -502,10 +508,11 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	//San Francisco
 	public List<MapBookmark> mockBookmarks(){
 		List<MapBookmark> bookmarks = new ArrayList<MapBookmark>();
+		bookmarks.add(new MapBookmark("Fisherman's Wharf", 37.8091011047, -122.416000366));
 		bookmarks.add(new MapBookmark("North Beach", 37.799800872802734, -122.40699768066406));
 		bookmarks.add(new MapBookmark("China Town", 37.792598724365234, -122.40599822998047));
-		bookmarks.add(new MapBookmark("Fisherman’s Wharf", 37.8091011047, -122.416000366));
-		bookmarks.add(new MapBookmark("Financial District", 37.79410171508789, -122.4010009765625));
+		bookmarks.add(new MapBookmark("Financial Dist", 37.79410171508789, -122.4010009765625));
+		bookmarks.add(new MapBookmark("Versant USA", 37.524393, -122.256527255));
 		return bookmarks;
 	}
 	
