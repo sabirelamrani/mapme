@@ -64,7 +64,7 @@ public class BookmarkOverlay extends Overlay {
 			Point selDestinationOffset = new Point();
 			mapView.getProjection().toPixels(selectedMapLocation.getPoint(), selDestinationOffset);    	
 	    	//  Setup the info window with the right size & location
-			int INFO_WINDOW_WIDTH = selectedMapLocation.getName().length()*9;//125;
+			int INFO_WINDOW_WIDTH = selectedMapLocation.getName().length()*9;
 			int INFO_WINDOW_HEIGHT = 25;
 			RectF infoWindowRect = new RectF(0, 0, INFO_WINDOW_WIDTH, INFO_WINDOW_HEIGHT);				
 			int infoWindowOffsetX = selDestinationOffset.x - INFO_WINDOW_WIDTH/2;
@@ -102,7 +102,8 @@ public class BookmarkOverlay extends Overlay {
             if (addresses.size() > 0) 
                 for (int i=0; i<addresses.get(0).getMaxAddressLineIndex(); i++)
                    address += addresses.get(0).getAddressLine(i) + "\n";
-            mMap.notifyUser(address);
+            if(address.trim().length() > 0)
+            	mMap.notifyUser(address);
         }
         catch (IOException e) {                
             mMap.notifyUser("GeoCoding error");
