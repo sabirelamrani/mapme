@@ -80,20 +80,20 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		setContentView(R.layout.mapview);
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
 		addContextMenu();
-		resetToHomePoint();
-		
 		//Initialize db4o
 		dbHelper();
-		
+		if(savedInstanceState == null){
+			resetToHomePoint();
+		}
 		//Create removable overlays
 		configureTracking();
 		configureCompass();
 		configureBookmarkOverlay();
-        
 		//Add permanent map overlays
 		mapOverlays().add(new SearchOverlay(this));
 	}
@@ -343,8 +343,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			int lon = (int) (location.getLongitude() * 1E6);
 			GeoPoint p = new GeoPoint(lat, lon);
 			//notifyUser("Location: " + Double.toString(lat) + "/" + Double.toString(lon));
-			//animateTo(p);
-			mapController().setCenter(p);
+			animateTo(p);
+			//mapController().setCenter(p);
 		}
 	}
 	
