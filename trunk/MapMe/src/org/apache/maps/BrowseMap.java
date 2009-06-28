@@ -64,14 +64,15 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public static final int TRAFFIC_INDEX = Menu.FIRST + 7;
 	public static final int STREETVIEW_INDEX = Menu.FIRST + 8;
 	public static final int BOOKMARK_VIEW_INDEX = Menu.FIRST + 9;
-	public static final int CENTER_LOCATION_INDEX = Menu.FIRST + 10;
-	public static final int TRACK_LOCATION_INDEX = Menu.FIRST + 11;
-	public static final int SETTINGS_INDEX = Menu.FIRST + 12;
-	public static final int COMPASS_INDEX = Menu.FIRST + 13;
+	public static final int COMPASS_INDEX = Menu.FIRST + 10;
+	public static final int CENTER_LOCATION_INDEX = Menu.FIRST + 11;
+	public static final int TRACK_LOCATION_INDEX = Menu.FIRST + 12;
+	public static final int SETTINGS_INDEX = Menu.FIRST + 13;
 	
 	protected static boolean TRACKING_MODE = false;
 	protected static boolean COMPASS_MODE = true;
 	protected static boolean BOOKMARK_MODE = true;
+	
 	protected static MapBookmark bookmark;
 	
 	protected static final GeoPoint HOME_POINT = new GeoPoint((int) (37.524393 * 1e6), 
@@ -80,10 +81,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		setContentView(R.layout.mapview);
 		mMapView = (MapView) findViewById(R.id.mapview);
 		mMapView.setBuiltInZoomControls(true);
+		mMapView.setClickable(true);
 		addContextMenu();
 		//Initialize db4o
 		dbHelper();
@@ -141,6 +142,10 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	
 	protected MapController mapController(){
 		return mMapView.getController();
+	}
+	
+	public Projection getProjection() {
+		return mMapView.getProjection();
 	}
 
 	protected Db4oHelper dbHelper() {
@@ -246,6 +251,19 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		return false;
 	}
 	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, 
+			ContextMenu.ContextMenuInfo menuInfo) {
+		menu.setHeaderTitle("Menu");
+		menu.add(0, 1, 0, "Add");
+		menu.add(0, 2, 0, "Delete");
+	}
+	
+	@Override
+	public boolean onContextItemSelected (MenuItem item){
+		return true;
+	}
+	
 	public void addContextMenu(){
 		mMapView.setLongClickable(true);
 		mMapView.setOnLongClickListener(new View.OnLongClickListener(){
@@ -255,7 +273,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 					return true;
 				}
 		});
-		mMapView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+		mMapView.setOnCreateContextMenuListener(this);
+		/*mMapView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
 				public void onCreateContextMenu(ContextMenu menu, View v, 
 						ContextMenu.ContextMenuInfo menuInfo) {
 					menu.setHeaderTitle("Menu");
@@ -264,7 +283,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 					menu.add(0, 3, 0, "Edit");
 				}
 		});
-		registerForContextMenu(mMapView);
+		registerForContextMenu(mMapView);*/
 	}
 	
 	public List<Address> getAddresses() {
@@ -478,6 +497,19 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			}
 		}
 	}
+	
+	/* Mock bookmarks */
+	//San Francisco
+	public List<MapBookmark> mockBookmarks(){
+		List<MapBookmark> bookmarks = new ArrayList<MapBookmark>();
+		bookmarks.add(new MapBookmark("North Beach", 37.799800872802734, -122.40699768066406));
+		bookmarks.add(new MapBookmark("China Town", 37.792598724365234, -122.40599822998047));
+		bookmarks.add(new MapBookmark("Fisherman’s Wharf", 37.8091011047, -122.416000366));
+		bookmarks.add(new MapBookmark("Financial District", 37.79410171508789, -122.4010009765625));
+		return bookmarks;
+	}
+	
+	/* Utility methods */
 
 	//Popup window to quickly pass user notifications
 	void notifyUser(Context ctx, String message){
@@ -487,6 +519,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	void notifyUser(String message) {
 		notifyUser(BrowseMap.this, message);
 	}
+	
+	/* Lifecycle methods */
 
 	@Override
 	protected void onPause() {
@@ -511,10 +545,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	protected boolean isRouteDisplayed() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	public Projection getProjection() {
-		return mMapView.getProjection();
 	}
 
 	public void onProviderDisabled(String arg0) {
