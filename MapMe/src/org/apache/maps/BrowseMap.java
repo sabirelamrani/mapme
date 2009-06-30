@@ -41,7 +41,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	private BookmarkOverlay bookmarkOverlay;
 
 	private static final int GET_SEARCH_TEXT = 0;
-	private static final int GET_BOOKMARK_INFO = 1;
+	private static final int SET_BOOKMARK_INFO = 1;
 	private static final int EDIT_BOOKMARKS = 2;
 	private static final int RESULT_GOTO_MAP = 3;
 
@@ -420,7 +420,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		mb.setSatellite(mMapView.isSatellite());
 		mb.setTraffic(mMapView.isTraffic());
 		Bookmark.current = mb;
-		startActivityForResult(intent, GET_BOOKMARK_INFO);
+		startActivityForResult(intent, SET_BOOKMARK_INFO);
 		return true;
 	}
 
@@ -458,8 +458,8 @@ public class BrowseMap extends MapActivity implements LocationListener {
 
 	private void goTo(int itemNo) {
 		Address addr = addresses.get(itemNo);
-		GeoPoint p = new GeoPoint(((int) (1e6 * addr.getLatitude())),
-				((int) (1e6 * addr.getLongitude())));
+		GeoPoint p = new GeoPoint(((int) (1E6 * addr.getLatitude())),
+				((int) (1E6 * addr.getLongitude())));
 		animateTo(p);
 	}
 
@@ -469,7 +469,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			String searchString = data.getStringExtra("searchString");
 			startSearch(searchString);
 			
-		} else if (requestCode == GET_BOOKMARK_INFO) {
+		} else if (requestCode == SET_BOOKMARK_INFO) {
 			if (data != null) {
 				String name = data.getStringExtra(BM_NAME);
 				if (name != null && name.length() > 0) {

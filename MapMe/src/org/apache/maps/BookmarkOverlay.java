@@ -24,7 +24,7 @@ import com.google.android.maps.Overlay;
 public class BookmarkOverlay extends Overlay {
 
 	private static final int BALLOON_HEIGHT = 34;
-	private static final int BALLOON_WIDTH = 37;
+	//private static final int BALLOON_WIDTH = 37;
 	private static final int BOOKMARK_CLICK_TOLERANCE = 400;
 	
 	private BrowseMap mMap;
@@ -77,37 +77,41 @@ public class BookmarkOverlay extends Overlay {
 			//  Draw the MapLocation's name
 			int TEXT_OFFSET_X = INFO_WINDOW_WIDTH/2;
 			int TEXT_OFFSET_Y = 15;
-			canvas.drawText(selectedMapLocation.getName(), infoWindowOffsetX + TEXT_OFFSET_X, infoWindowOffsetY + TEXT_OFFSET_Y, getTextPaint());
+			String windowText = selectedMapLocation.getName();
+			canvas.drawText(windowText, infoWindowOffsetX + TEXT_OFFSET_X, infoWindowOffsetY + TEXT_OFFSET_Y, getTextPaint());
     	}
     }
     
     @Override
     public boolean onTap(GeoPoint point, MapView view) {
-        //mMap.notifyUser("Tapped: " + Double.toString(point.getLatitudeE6()/1.0E6) 
-        		//+ "/" + Double.toString(point.getLongitudeE6()/1.0E6)); 
-        /*List<MapBookmark> bookmarks = 
+        List<MapBookmark> bookmarks = 
         	mMap.dbHelper().getNearbyBookmarks(point, BOOKMARK_CLICK_TOLERANCE);
-        Iterator<MapBookmark> iterator = bookmarks.iterator();
-        while(iterator.hasNext()){
-        	MapBookmark bookmark = iterator.next();
-        	mMap.notifyUser(bookmark.getName());
-        }*/
-        Geocoder geoCoder = new Geocoder(mMap.getBaseContext(), Locale.getDefault());
-        try {
-            List<Address> addresses = geoCoder.getFromLocation(
-                point.getLatitudeE6()  / 1E6, 
-                point.getLongitudeE6() / 1E6, 1);
-            String address = "";
-          //Display all lines of first address
-            if (addresses.size() > 0) 
-                for (int i=0; i<addresses.get(0).getMaxAddressLineIndex(); i++)
-                   address += addresses.get(0).getAddressLine(i) + "\n";
-            if(address.trim().length() > 0)
-            	mMap.notifyUser(address);
+        if(bookmarks.size() > 0){
+        	Iterator<MapBookmark> iterator = bookmarks.iterator();
+        	while(iterator.hasNext()){
+        		MapBookmark bookmark = iterator.next();
+        		mMap.notifyUser(bookmark.getName() + "\n" 
+        				+ bookmark.getLatitude()/1.0E6 + "\n"
+        				+ bookmark.getLongitude()/1.0E6);
+        	}
+        }else {
+	        Geocoder geoCoder = new Geocoder(mMap.getBaseContext(), Locale.getDefault());
+	        try {
+	            List<Address> addresses = geoCoder.getFromLocation(
+	                point.getLatitudeE6()  / 1E6, 
+	                point.getLongitudeE6() / 1E6, 1);
+	            String address = "";
+	          //Display all lines of first address
+	            if (addresses.size() > 0) 
+	                for (int i=0; i<addresses.get(0).getMaxAddressLineIndex(); i++)
+	                   address += addresses.get(0).getAddressLine(i) + "\n";
+	            if(address.trim().length() > 0)
+	            	mMap.notifyUser(address);
+	        }
+	        catch (IOException e) {                
+	            mMap.notifyUser("GeoCoding error");
+	        }   
         }
-        catch (IOException e) {                
-            mMap.notifyUser("GeoCoding error");
-        }   
         return super.onTap(point, view);
     }
     
