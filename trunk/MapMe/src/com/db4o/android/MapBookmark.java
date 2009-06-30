@@ -20,6 +20,7 @@ public class MapBookmark {
 		this.name = name;
 		this.latitude = (int)(latitude*1E6);
 		this.longitude = (int)(longitude*1E6);
+		this.zoomLevel = 15;
 	}
 	
 	public MapBookmark(String name){
