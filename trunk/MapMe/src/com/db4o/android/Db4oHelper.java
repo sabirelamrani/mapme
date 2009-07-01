@@ -22,6 +22,7 @@ public class Db4oHelper {
 	
 	private static ObjectContainer oc = null;
 	private Context context;
+	private final String dbName = "bookmarks.db4o";
 	
 	/**
      * 
@@ -54,7 +55,7 @@ public class Db4oHelper {
     }
 	
 	private String db4oDBFullPath(Context ctx) {
-		return ctx.getDir("data", 0) + "/" + "browsemap.db4o";
+		return ctx.getDir("data", 0) + "/" + dbName;
 	}
 	
 	/**
@@ -165,7 +166,7 @@ public class Db4oHelper {
     	}
     }
     
-    public int bookamrkCount(){
+    public int bookmarkCount(){
     	return getBookmarks().size();
     }
     
