@@ -102,7 +102,7 @@ public class BookmarkList extends ListActivity {
 			finish();
 		    break;
 		case COUNT_BOOKMARK_INDEX:
-		    int count = dbHelper().bookamrkCount();
+		    int count = dbHelper().bookmarkCount();
 		    notifyUser("Entries: " + Integer.toString(count));
 		    break;
 		}
@@ -111,7 +111,10 @@ public class BookmarkList extends ListActivity {
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		editBookmark(position);
+		//editBookmark(position);
+		BrowseMap.bookmark = entries.get(position);
+		setResult(RESULT_GOTO_MAP);
+		finish();
     }
     
     private void editBookmark(int position){
@@ -151,5 +154,4 @@ public class BookmarkList extends ListActivity {
     protected void notifyUser(String msg){
     	Toast.makeText(BookmarkList.this, msg, Toast.LENGTH_SHORT).show();
     }
-
 }

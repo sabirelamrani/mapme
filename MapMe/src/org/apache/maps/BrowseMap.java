@@ -73,6 +73,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	protected static boolean TRACKING_MODE = false;
 	protected static boolean COMPASS_MODE = true;
 	protected static boolean BOOKMARK_MODE = true;
+	protected static boolean EMULATOR_MODE = true;
 	
 	protected static MapBookmark bookmark;
 	
@@ -98,9 +99,12 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			resetToHomePoint();
 		}
 		//Create removable overlays
-		configureTracking();
-		configureCompass();
+		
 		configureBookmarkOverlay();
+		if(!EMULATOR_MODE){
+			configureTracking();//Adds a MyLocationOverlay
+			configureCompass();
+		}
 		//Add permanent map overlays
 		mapOverlays().add(new SearchOverlay(this));
 	}
@@ -249,9 +253,14 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		} else if (keyCode >= KeyEvent.KEYCODE_1
 				&& keyCode <= KeyEvent.KEYCODE_9) {
 			int item = keyCode - KeyEvent.KEYCODE_1;
-			if (addresses.size() > item) {
-				notifyUser(addresses.get(item).toString());
-				goTo(item);
+			
+			String address = "";
+			if (addresses.size() > item){
+                for (int i=0; i<addresses.get(0).getMaxAddressLineIndex(); i++)
+                   address += addresses.get(0).getAddressLine(i) + "\n";
+                if(address.trim().length() > 0)
+                	notifyUser(address);
+                goTo(item);
 			}
 		}
 		return false;
@@ -374,30 +383,36 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 	
 	public boolean performCompassMode(boolean isChecked) {
-		COMPASS_MODE = isChecked;
-		if(isChecked)
-			myLocationOverlay.enableCompass();
-		else
-			myLocationOverlay.disableCompass();
-		mMapView.invalidate();
-		return true;
+		if(!EMULATOR_MODE){
+			COMPASS_MODE = isChecked;
+			if(isChecked)
+				myLocationOverlay.enableCompass();
+			else
+				myLocationOverlay.disableCompass();
+			mMapView.invalidate();
+			return true;
+		}
+		return false;
 	}
 
 	public boolean performTrackLocation(boolean isChecked) {
-		TRACKING_MODE = isChecked;
-		if(isChecked){
-			myLocationOverlay.enableMyLocation();
-	        //performCenterOnLocation();
+		if(!EMULATOR_MODE){
+			TRACKING_MODE = isChecked;
+			if(isChecked){
+				myLocationOverlay.enableMyLocation();
+		        //performCenterOnLocation();
+			}
+			else{
+				//mapOverlays().remove(myLocationOverlay);
+				myLocationOverlay.disableMyLocation();
+				//Get location manager
+			 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+			 	locationManager.removeUpdates(this);
+			}
+			mMapView.invalidate();
+			return true;
 		}
-		else{
-			//mapOverlays().remove(myLocationOverlay);
-			myLocationOverlay.disableMyLocation();
-			//Get location manager
-		 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-		 	locationManager.removeUpdates(this);
-		}
-		mMapView.invalidate();
-		return true;
+		return false;
 	}
 	
 	public boolean performBookmarkView(boolean isChecked) {
@@ -438,7 +453,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	//Reverse geocoding
 	private void startSearch(final String text) {
 		mGeocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
-		Thread t = new Thread(new Runnable() {
+		/*Thread t = new Thread(new Runnable() {
 			public void run() {
 				try {
 					addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
@@ -452,8 +467,16 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			}
 
 		});
-		t.start();
-
+		t.start();*/
+		try {
+			addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
+			if (addresses.size() > 0) 
+				goTo(0);//TODO offer list with all locations for selection
+			else
+				notifyUser("No location found!");//TODO Report not found
+		} catch (IOException ioe) {
+			notifyUser("Search failed:" + ioe.getMessage());
+		}
 	}
 
 	private void goTo(int itemNo) {
@@ -532,20 +555,24 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if(TRACKING_MODE)
-			myLocationOverlay.disableMyLocation();
-		if(COMPASS_MODE)
-			myLocationOverlay.disableCompass();
-		dbHelper().close();
-		db4oHelper = null;
+		if(!EMULATOR_MODE){
+			if(TRACKING_MODE)
+				myLocationOverlay.disableMyLocation();
+			if(COMPASS_MODE)
+				myLocationOverlay.disableCompass();
+			dbHelper().close();
+			db4oHelper = null;
+		}
 	}
 	
-	@Override protected void onResume() { 
+	@Override protected void onResume() {
 		super.onResume();
-		if(TRACKING_MODE && !myLocationOverlay.isMyLocationEnabled())
-			myLocationOverlay.enableMyLocation();
-		if(COMPASS_MODE && !myLocationOverlay.isCompassEnabled())
-			myLocationOverlay.enableCompass();
+		if(!EMULATOR_MODE){
+			if(TRACKING_MODE && !myLocationOverlay.isMyLocationEnabled())
+				myLocationOverlay.enableMyLocation();
+			if(COMPASS_MODE && !myLocationOverlay.isCompassEnabled())
+				myLocationOverlay.enableCompass();
+		}
 	}
 
 	@Override
