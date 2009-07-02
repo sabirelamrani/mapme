@@ -91,8 +91,8 @@ public class BookmarkOverlay extends Overlay {
         	while(iterator.hasNext()){
         		MapBookmark bookmark = iterator.next();
         		mMap.notifyUser(bookmark.getName() + "\n" 
-        				+ bookmark.getLatitude()/1.0E6 + "\n"
-        				+ bookmark.getLongitude()/1.0E6);
+        				+ "Lat: " + bookmark.getLatitude()/1.0E6 + "\n"
+        				+ "Lon: " + bookmark.getLongitude()/1.0E6);
         	}
         }else {
 	        Geocoder geoCoder = new Geocoder(mMap.getBaseContext(), Locale.getDefault());

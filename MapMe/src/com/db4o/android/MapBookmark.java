@@ -1,5 +1,7 @@
 package com.db4o.android;
 
+import android.location.Address;
+
 import com.google.android.maps.GeoPoint;
 
 public class MapBookmark {
@@ -44,6 +46,13 @@ public class MapBookmark {
 		this.traffic = traffic;
 	}
 
+	public MapBookmark(Address address) {
+		this.name = address.getAddressLine(0);
+		this.latitude = (int)(1E6 * address.getLatitude());
+		this.longitude = (int)(1E6 * address.getLongitude());
+		this.zoomLevel = 15;
+	}
+
 	/**
 	 * @return the name
 	 */
@@ -62,6 +71,8 @@ public class MapBookmark {
 	 * @return the description
 	 */
 	public String getDescription() {
+		if(description == null)
+			description = "";
 		return description;
 	}
 

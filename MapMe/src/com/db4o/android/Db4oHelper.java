@@ -9,6 +9,9 @@ import android.util.Log;
 import com.db4o.android.MapBookmark;
 import com.db4o.*;
 import com.db4o.config.*;
+//import com.db4o.internal.ObjectContainerBase;
+//import com.db4o.internal.query.Db4oQueryExecutionListener;
+//import com.db4o.internal.query.NQOptimizationInfo;
 import com.db4o.query.Predicate;
 import com.db4o.query.Query;
 import com.google.android.maps.GeoPoint;
@@ -37,6 +40,11 @@ public class Db4oHelper {
     		if(oc == null || oc.ext().isClosed()){
     			//new File(db4oDBFullPath(context)).delete();
     			oc = Db4o.openFile(dbConfig(), db4oDBFullPath(context));
+    			/*((ObjectContainerBase)oc).getNativeQueryHandler().addListener(new Db4oQueryExecutionListener() {
+					public void notifyQueryExecuted(NQOptimizationInfo info) {
+						System.err.println(info);
+					}
+    			});*/
     		}
     		return oc;
     	} catch (Exception e) {
@@ -152,6 +160,17 @@ public class Db4oHelper {
             		(candidate.longitude <= (mapCenter.getLongitudeE6() + tolerance)) &&
             		(candidate.longitude >= (mapCenter.getLongitudeE6() - tolerance));
                 return inLatitude && inLongitude;
+            }
+        });
+    }
+    
+    @SuppressWarnings("serial")
+	public List<MapBookmark> getBookmarksByKeyword(final String keyword){
+    	return db().query(new Predicate<MapBookmark>() {
+            public boolean match(MapBookmark candidate) {
+            	return 
+            		candidate.getName().toLowerCase().contains(keyword) || 
+            		candidate.getDescription().toLowerCase().contains(keyword);
             }
         });
     }

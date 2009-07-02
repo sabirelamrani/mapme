@@ -44,15 +44,17 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	private static final int SET_BOOKMARK_INFO = 1;
 	private static final int EDIT_BOOKMARKS = 2;
 	private static final int RESULT_GOTO_MAP = 3;
+	private static final int SEARCH_RESULTS = 4;
 
-	public static int MAX_RESULTS = 9;
+	public static int MAX_RESULTS = 5;
 	public static final String BM_NAME = "name";
 	public static final String BM_DESC = "desc";
 	public static final String BKM_LATITUDE = "lat";
 	public static final String BKM_LONGITUDE = "lon";
 
 	Geocoder mGeocoder = null;
-	List<Address> addresses = new ArrayList<Address>();
+	protected static List<Address> foundAddresses = new ArrayList<Address>();
+	static List<MapBookmark> foundBookmarks;
 
 	// Menu Item order
 	public static final int ZOOM_IN_INDEX = Menu.FIRST;
@@ -73,13 +75,13 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	protected static boolean TRACKING_MODE = false;
 	protected static boolean COMPASS_MODE = true;
 	protected static boolean BOOKMARK_MODE = true;
-	protected static boolean EMULATOR_MODE = true;
+	protected static boolean EMULATOR_MODE = false;
 	
 	protected static MapBookmark bookmark;
 	
 	protected static final GeoPoint HOME_POINT = new GeoPoint(
-			(int) (37.799800872802734 * 1e6), 
-			(int) (-122.40699768066406 * 1e6)); //North Beach
+			(int) (37.799800872802734 * 1E6), 
+			(int) (-122.40699768066406 * 1E6)); //North Beach
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -253,17 +255,20 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		} else if (keyCode >= KeyEvent.KEYCODE_1
 				&& keyCode <= KeyEvent.KEYCODE_9) {
 			int item = keyCode - KeyEvent.KEYCODE_1;
-			
 			String address = "";
-			if (addresses.size() > item){
-                for (int i=0; i<addresses.get(0).getMaxAddressLineIndex(); i++)
-                   address += addresses.get(0).getAddressLine(i) + "\n";
+			if (foundAddresses.size() > item){
+                for (int i=0; i<foundAddresses.get(0).getMaxAddressLineIndex(); i++)
+                   address += foundAddresses.get(0).getAddressLine(i) + "\n";
                 if(address.trim().length() > 0)
                 	notifyUser(address);
                 goTo(item);
 			}
 		}
 		return false;
+	}
+	
+	public List<Address> getAddresses() {
+		return foundAddresses;
 	}
 	
 	@Override
@@ -300,10 +305,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		});
 		registerForContextMenu(mMapView);*/
 	}
-	
-	public List<Address> getAddresses() {
-		return addresses;
-	}
 
 	public boolean performZoomIn() {
 		int level = mMapView.getZoomLevel();
@@ -318,19 +319,16 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 
 	public boolean performToggleSatellite() {
-		// Switch on/off the satellite images
 		mMapView.setSatellite(!mMapView.isSatellite());
 		return true;
 	}
 
 	public boolean performToggleTraffic() {
-		// Switch on/off traffic overlays
 		mMapView.setTraffic(!mMapView.isTraffic());
 		return true;
 	}
 	
 	public boolean performToggleStreetView() {
-		// Switch on/off StreetView mode
 		mMapView.setStreetView(!mMapView.isStreetView());
 		return true;
 	}
@@ -378,7 +376,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			GeoPoint p = new GeoPoint(lat, lon);
 			//notifyUser("Location: " + Double.toString(lat) + "/" + Double.toString(lon));
 			animateTo(p);
-			//mapController().setCenter(p);
 		}
 	}
 	
@@ -398,12 +395,9 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	public boolean performTrackLocation(boolean isChecked) {
 		if(!EMULATOR_MODE){
 			TRACKING_MODE = isChecked;
-			if(isChecked){
+			if(isChecked)
 				myLocationOverlay.enableMyLocation();
-		        //performCenterOnLocation();
-			}
 			else{
-				//mapOverlays().remove(myLocationOverlay);
 				myLocationOverlay.disableMyLocation();
 				//Get location manager
 			 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -444,6 +438,12 @@ public class BrowseMap extends MapActivity implements LocationListener {
 		startActivityForResult(intent, EDIT_BOOKMARKS);
 		return true;
 	}
+	
+	public boolean performEditSearchResults() {
+		Intent intent = new Intent(BrowseMap.this, org.apache.maps.SearchList.class);
+		startActivityForResult(intent, SEARCH_RESULTS);
+		return true;
+	}
 
 	public boolean performFindPizza() {
 		startSearch("Pizza");
@@ -453,34 +453,21 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	//Reverse geocoding
 	private void startSearch(final String text) {
 		mGeocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
-		/*Thread t = new Thread(new Runnable() {
-			public void run() {
-				try {
-					addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
-					if (addresses.size() > 0) 
-						goTo(0);//TODO offer list with all locations for selection
-					//else
-						//notifyUser("No location found!");//TODO Report not found
-				} catch (IOException ioe) {
-					//notifyUser("Search failed:" + ioe.getMessage());
-				}
-			}
-
-		});
-		t.start();*/
 		try {
-			addresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
-			if (addresses.size() > 0) 
-				goTo(0);//TODO offer list with all locations for selection
-			else
-				notifyUser("No location found!");//TODO Report not found
+			foundAddresses = mGeocoder.getFromLocationName(text, MAX_RESULTS);
+			List<MapBookmark> temp = db4oHelper.getBookmarksByKeyword(text);
+			foundBookmarks = new ArrayList<MapBookmark>();
+			Iterator<MapBookmark> bookmarkIterator = temp.iterator();
+			while(bookmarkIterator.hasNext())
+				foundBookmarks.add(bookmarkIterator.next());
+			performEditSearchResults();
 		} catch (IOException ioe) {
-			notifyUser("Search failed:" + ioe.getMessage());
+			notifyUser("Search failed: " + ioe.getMessage());
 		}
 	}
 
 	private void goTo(int itemNo) {
-		Address addr = addresses.get(itemNo);
+		Address addr = foundAddresses.get(itemNo);
 		GeoPoint p = new GeoPoint(((int) (1E6 * addr.getLatitude())),
 				((int) (1E6 * addr.getLongitude())));
 		animateTo(p);
@@ -512,7 +499,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 					notifyUser("Please enter a name");
 			} else
 				notifyUser("Please enter a name");
-		} else if (requestCode == EDIT_BOOKMARKS) {
+		} else if (requestCode == EDIT_BOOKMARKS || requestCode == SEARCH_RESULTS) {
 			if (resultCode == RESULT_GOTO_MAP) {
 				if (mMapView.isSatellite() != BrowseMap.bookmark.isSatellite())
 					mMapView.setSatellite(true);
@@ -528,7 +515,7 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 	
 	/* Mock bookmarks */
-	//San Francisco
+	//San Francisco spots
 	public List<MapBookmark> mockBookmarks(){
 		List<MapBookmark> bookmarks = new ArrayList<MapBookmark>();
 		bookmarks.add(new MapBookmark("Fisherman's Wharf", 37.8091011047, -122.416000366));
