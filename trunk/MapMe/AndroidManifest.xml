@@ -21,5 +21,6 @@
         <activity class=".Search" android:name="Search" android:label="Find"/>
         <activity class=".Bookmark" android:name="Bookmark" />
         <activity class=".BookmarkList" android:name="BookmarkList" android:label="Bookmarks"/>
+        <activity class=".SearchList" android:name="SearchList" android:label="Search Results"/>
     </application>
 </manifest> 

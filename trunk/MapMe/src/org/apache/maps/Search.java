@@ -25,7 +25,6 @@ public class Search extends Activity {
 
             public void onClick(View v) {
             	Intent callbackIntent = new Intent();
-				
 				// Return the search string to the caller.
 				callbackIntent.putExtra("searchString", ((EditText)findViewById(R.id.searchText)).getText().toString());
 				setResult(RESULT_OK, callbackIntent);
