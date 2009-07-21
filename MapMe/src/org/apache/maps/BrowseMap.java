@@ -75,7 +75,6 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	protected static boolean TRACKING_MODE = false;
 	protected static boolean COMPASS_MODE = true;
 	protected static boolean BOOKMARK_MODE = true;
-	protected static boolean EMULATOR_MODE = false;
 	
 	protected static MapBookmark bookmark;
 	
@@ -101,12 +100,9 @@ public class BrowseMap extends MapActivity implements LocationListener {
 			resetToHomePoint();
 		}
 		//Create removable overlays
-		
 		configureBookmarkOverlay();
-		if(!EMULATOR_MODE){
-			configureTracking();//Adds a MyLocationOverlay
-			configureCompass();
-		}
+		configureTracking();//Adds a MyLocationOverlay
+		configureCompass();
 		//Add permanent map overlays
 		mapOverlays().add(new SearchOverlay(this));
 	}
@@ -380,33 +376,27 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	}
 	
 	public boolean performCompassMode(boolean isChecked) {
-		if(!EMULATOR_MODE){
-			COMPASS_MODE = isChecked;
-			if(isChecked)
-				myLocationOverlay.enableCompass();
-			else
-				myLocationOverlay.disableCompass();
-			mMapView.invalidate();
-			return true;
-		}
-		return false;
+		COMPASS_MODE = isChecked;
+		if(isChecked)
+			myLocationOverlay.enableCompass();
+		else
+			myLocationOverlay.disableCompass();
+		mMapView.invalidate();
+		return true;
 	}
 
 	public boolean performTrackLocation(boolean isChecked) {
-		if(!EMULATOR_MODE){
-			TRACKING_MODE = isChecked;
-			if(isChecked)
-				myLocationOverlay.enableMyLocation();
-			else{
-				myLocationOverlay.disableMyLocation();
-				//Get location manager
-			 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-			 	locationManager.removeUpdates(this);
-			}
-			mMapView.invalidate();
-			return true;
+		TRACKING_MODE = isChecked;
+		if(isChecked)
+			myLocationOverlay.enableMyLocation();
+		else{
+			myLocationOverlay.disableMyLocation();
+			//Get location manager
+		 	LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		 	locationManager.removeUpdates(this);
 		}
-		return false;
+		mMapView.invalidate();
+		return true;
 	}
 	
 	public boolean performBookmarkView(boolean isChecked) {
@@ -542,24 +532,20 @@ public class BrowseMap extends MapActivity implements LocationListener {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if(!EMULATOR_MODE){
-			if(TRACKING_MODE)
-				myLocationOverlay.disableMyLocation();
-			if(COMPASS_MODE)
-				myLocationOverlay.disableCompass();
-			dbHelper().close();
-			db4oHelper = null;
-		}
+		if(TRACKING_MODE)
+			myLocationOverlay.disableMyLocation();
+		if(COMPASS_MODE)
+			myLocationOverlay.disableCompass();
+		dbHelper().close();
+		db4oHelper = null;
 	}
 	
 	@Override protected void onResume() {
 		super.onResume();
-		if(!EMULATOR_MODE){
-			if(TRACKING_MODE && !myLocationOverlay.isMyLocationEnabled())
-				myLocationOverlay.enableMyLocation();
-			if(COMPASS_MODE && !myLocationOverlay.isCompassEnabled())
-				myLocationOverlay.enableCompass();
-		}
+		if(TRACKING_MODE && !myLocationOverlay.isMyLocationEnabled())
+			myLocationOverlay.enableMyLocation();
+		if(COMPASS_MODE && !myLocationOverlay.isCompassEnabled())
+			myLocationOverlay.enableCompass();
 	}
 
 	@Override
